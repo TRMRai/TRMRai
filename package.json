@@ -111,6 +111,15 @@
           "when": "view == claude-dev.SidebarProvider"
         }
       ]
+    },
+    "configuration": {
+      "properties": {
+        "cline.alwaysAllowBrowser": {
+          "type": "boolean",
+          "default": false,
+          "description": "Always allow browser actions without requiring confirmation"
+        }
+      }
     }
   },
   "scripts": {
@@ -189,9 +198,5 @@
     "turndown": "^7.2.0",
     "vsce": "^2.15.0",
     "web-tree-sitter": "^0.22.6"
-  },
-  "files": [
-    "bin/roo-cline-2.0.2.vsix",
-    "assets/icons/icon_Roo.png"
-  ]
+  }
 }
