@@ -6,6 +6,7 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { createClineAPI } from "./exports"
 import "./utils/path" // necessary to have access to String.prototype.toPosix
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import { scheduleUpdateChecks, checkForUpdates } from "./utils/version-check"
 
 /*
 Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -26,6 +27,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	outputChannel.appendLine("Cline extension activated")
 
+	// Schedule periodic update checks
+	scheduleUpdateChecks(context).catch(error => {
+		outputChannel.appendLine(`Failed to initialize update checks: ${error}`)
+	})
+
 	const sidebarProvider = new ClineProvider(context, outputChannel)
 
 	context.subscriptions.push(
@@ -37,6 +43,26 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand("cline.plusButtonClicked", async () => {
 			outputChannel.appendLine("Plus button Clicked")
+			
+			// Check for updates before starting new task
+			const updateCheck = await checkForUpdates(context);
+			if (updateCheck?.updateAvailable) {
+				const choice = await vscode.window.showInformationMessage(
+					`A new version of Roo Cline (${updateCheck.latest}) is available. It's recommended to update before starting a new task.`,
+					'Update Now',
+					'Continue Anyway',
+					'Cancel'
+				);
+				
+				if (choice === 'Cancel') {
+					return;
+				} else if (choice === 'Update Now') {
+					// User chose to update, don't start new task
+					return;
+				}
+				// If 'Continue Anyway', proceed with new task
+			}
+			
 			await sidebarProvider.clearTask()
 			await sidebarProvider.postStateToWebview()
 			await sidebarProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
