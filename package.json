@@ -130,7 +130,7 @@
   "scripts": {
     "build": "npm run build:webview && npm run vsix",
     "build:webview": "cd webview-ui && npm run build",
-    "co:login": "scripts/codeartifact-login.sh",
+    "co:login": ".github/scripts/codeartifact-login.sh",
     "co:install": "npm run co:login && npm install",
     "changeset": "changeset",
     "check-types": "tsc --noEmit",
