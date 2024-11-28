@@ -56,8 +56,8 @@ export class BrowserSession {
 					"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
 				],
 				defaultViewport: {
-					width: 900,
-					height: 600
+					width: 1440,
+					height: 900
 				},
 				headless: false, // Always use non-headless mode
 			})
@@ -65,6 +65,12 @@ export class BrowserSession {
 		}
 
 		this.page = await this.browser?.newPage()
+		await this.page?.setViewport({ 
+			width: 1440, 
+			height: 900,
+			deviceScaleFactor: 1,
+			isMobile: false 
+		  });
 
 		return {
 			screenshot: "",
@@ -182,7 +188,7 @@ export class BrowserSession {
 	}
 
 	private async waitTillHTMLStable(page: Page, timeout = 5_000) {
-		const checkDurationMsecs = 500
+		const checkDurationMsecs = 500 // 1000
 		const maxChecks = timeout / checkDurationMsecs
 		let lastHTMLSize = 0
 		let checkCounts = 1
@@ -272,9 +278,5 @@ export class BrowserSession {
 			})
 			await delay(300)
 		})
-	}
-
-	get isInInteractiveMode(): boolean {
-		return this.isInteractive
 	}
 }

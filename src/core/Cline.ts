@@ -1504,7 +1504,7 @@ export class Cline {
 									}
 									
 									this.consecutiveMistakeCount = 0
-									const didApprove = await askApproval("browser_action_launch", url)
+									const didApprove = this.alwaysAllowBrowser || await askApproval("browser_action_launch", url)
 									if (!didApprove) {
 										break
 									}
@@ -1567,7 +1567,6 @@ export class Cline {
 											break
 									}
 								}
-					
 								switch (action) {
 									case "launch":
 									case "click":
@@ -1595,7 +1594,7 @@ export class Cline {
 								break
 							}
 						} catch (error) {
-							await this.browserSession.closeBrowser()
+							await this.browserSession.closeBrowser() // if any error occurs, the browser session is terminated
 							await handleError("executing browser action", error)
 							break
 						}
@@ -1763,11 +1762,7 @@ export class Cline {
 					
 								const { response, text, images } = await this.ask("completion_result", "", false)
 								if (response === "yesButtonClicked") {
-									// Only close browser if not in interactive mode
-									if (!this.browserSession.isInInteractiveMode) {
-										await this.browserSession.closeBrowser()
-									}
-									pushToolResult("")
+									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
 									break
 								}
 								await this.say("user_feedback", text ?? "", images)
@@ -1794,7 +1789,7 @@ export class Cline {
 								break
 							}
 						} catch (error) {
-							await handleError("completing task", error)
+							await handleError("inspecting site", error)
 							break
 						}
 					}
