@@ -668,22 +668,43 @@ export class Cline {
 		if (responseImages && responseImages.length > 0) {
 			newUserContent.push(...formatResponse.imageBlocks(responseImages))
 		}
-
+		const wasInteractiveBrowser = (lastRelevantMessageIndex > 0) ? modifiedClineMessages[lastRelevantMessageIndex - 1].text?.includes("interactive mode") : false
 		await this.overwriteApiConversationHistory(modifiedApiConversationHistory)
-		await this.initiateTaskLoop(newUserContent)
+		await this.initiateTaskLoop(newUserContent, wasInteractiveBrowser)
 	}
 
-	private async initiateTaskLoop(userContent: UserContent): Promise<void> {
-		let nextUserContent = userContent
-		let includeFileDetails = true
+	private async initiateTaskLoop(userContent: UserContent, wasInteractiveBrowser: boolean = false): Promise<void> {
+		// Check if any text block contains "interactive mode"
+		const hasInteractiveMode = userContent.some((block) => {
+			if (block.type === "text" && typeof block.text === "string") {
+				this.providerRef.deref()?.outputChannel.appendLine(`initiateTaskLoop :: block.text :: ${block.text.toLowerCase()}`)
+
+				return (block.type === "text" && 
+					typeof block.text === "string" && 
+					block.text.toLowerCase().includes("interactive mode"))
+			} else {
+				return false
+			}
+		}
+		) || wasInteractiveBrowser;
+
+		this.providerRef.deref()?.outputChannel.appendLine(`initiateTaskLoop :: hasInteractiveMode :: ${hasInteractiveMode}`)
+		
+		// Set interactive mode flag if found in text
+		if (hasInteractiveMode) {
+			this.isInteractiveMode = true;
+		}
+	
+		let nextUserContent = userContent;
+		let includeFileDetails = true;
 		while (!this.abort) {
-			const didEndLoop = await this.recursivelyMakeClineRequests(nextUserContent, includeFileDetails)
-			includeFileDetails = false // we only need file details the first time
-
-			//  The way this agentic loop works is that cline will be given a task that he then calls tools to complete. unless there's an attempt_completion call, we keep responding back to him with his tool's responses until he either attempt_completion or does not use anymore tools. If he does not use anymore tools, we ask him to consider if he's completed the task and then call attempt_completion, otherwise proceed with completing the task.
-			// There is a MAX_REQUESTS_PER_TASK limit to prevent infinite requests, but Cline is prompted to finish the task as efficiently as he can.
-
-			//const totalCost = this.calculateApiCost(totalInputTokens, totalOutputTokens)
+			const didEndLoop = await this.recursivelyMakeClineRequests(
+				nextUserContent, 
+				includeFileDetails,
+				this.isInteractiveMode // Pass the flag to recursivelyMakeClineRequests
+			)
+			includeFileDetails = false
+	
 			if (didEndLoop) {
 				// For now a task never 'completes'. This will only happen if the user hits max requests and denies resetting the count.
 				//this.say("task_completed", `Task completed. Total API usage cost: ${totalCost}`)
@@ -697,7 +718,7 @@ export class Cline {
 					{
 						type: "text",
 						text: formatResponse.noToolsUsed(),
-					},
+					}
 				]
 				this.consecutiveMistakeCount++
 			}
@@ -1462,130 +1483,95 @@ export class Cline {
 										await this.browserSession.closeBrowser()
 										break
 									}
-					
-									// Check if this is an interactive mode request
-									const isInteractiveRequest = url.toLowerCase().includes("interactive=true")
-									const actualUrl = isInteractiveRequest ? url.replace(/[?&]interactive=true/i, '') : url
 									
-									if (isInteractiveRequest) {
-										this.isInteractiveMode = true
-										this.consecutiveMistakeCount = 0
-										const didApprove = await askApproval("browser_action_launch", 
-											`Launch browser in interactive mode for URL: ${actualUrl}`)
-										if (!didApprove) {
-											break
-										}
-					
-										await this.browserSession.launchBrowser(true)
-										browserActionResult = await this.browserSession.navigateToUrl(actualUrl)
-										
-										await this.say("browser_action_result", JSON.stringify(browserActionResult))
-										pushToolResult(
-											formatResponse.toolResult(
-												`Browser launched in interactive mode. The browser will remain open for manual interaction until explicitly closed. You can:\n` +
-												`1. Keep browsing\n` +
-												`2. Take another action\n` +
-												`3. Close the browser\n\n` +
-												`Console logs:\n${browserActionResult.logs || "(No new logs)"}`,
-												browserActionResult.screenshot ? [browserActionResult.screenshot] : []
-											)
-										)
+									this.consecutiveMistakeCount = 0
+									const didApprove = await askApproval("browser_action_launch", url)
+									if (!didApprove) {
 										break
-									} else {
-										this.isInteractiveMode = false
-										this.consecutiveMistakeCount = 0
-										const didApprove = await askApproval("browser_action_launch", url)
-										if (!didApprove) {
-											break
-										}
+									}
 
 									// NOTE: it's okay that we call this message since the partial inspect_site is finished streaming. The only scenario we have to avoid is sending messages WHILE a partial message exists at the end of the messages array. For example the api_req_finished message would interfere with the partial message, so we needed to remove that.
 									// await this.say("inspect_site_result", "") // no result, starts the loading spinner waiting for result
-
-										await this.say("browser_action_result", "") // starts loading spinner
-					
-										await this.browserSession.launchBrowser()
-										browserActionResult = await this.browserSession.navigateToUrl(actualUrl)
-									}
-									
-								} else if (action === "close") {
-									// Handle close action for interactive mode
-									if (this.isInteractiveMode) {
-										browserActionResult = await this.browserSession.closeBrowser()
-										if (browserActionResult.logs?.includes("Would you like to:")) {
-											// Browser is asking for confirmation
-											await this.say("browser_action_result", JSON.stringify(browserActionResult))
-											pushToolResult(
-												formatResponse.toolResult(
-													`The browser is in interactive mode. Please confirm if you want to:\n` +
-													`1. Keep browsing\n` +
-													`2. Take another action\n` +
-													`3. Close the browser`,
-													browserActionResult.screenshot ? [browserActionResult.screenshot] : []
-												)
-											)
-											break
-										}
-										this.isInteractiveMode = false
-									} else {
-										browserActionResult = await this.browserSession.closeBrowser()
-									}
+									await this.say("browser_action_result", "") // starts loading spinner
+									await this.browserSession.launchBrowser(this.isInteractiveMode)
+									browserActionResult = await this.browserSession.navigateToUrl(url)
 								} else {
-									// Handle other actions (click, type, scroll)
-									if (this.isInteractiveMode) {
-										pushToolResult(
-											formatResponse.toolResult(
-												`Cannot perform browser actions while in interactive mode. The user has manual control. You can:\n` +
-												`1. Keep browsing\n` +
-												`2. Take another action\n` +
-												`3. Close the browser`
-											)
-										)
-										break
-									}
-					
 									if (action === "click") {
 										if (!coordinate) {
 											this.consecutiveMistakeCount++
-											pushToolResult(await this.sayAndCreateMissingParamError("browser_action", "coordinate"))
+											pushToolResult(
+												await this.sayAndCreateMissingParamError(
+													"browser_action",
+													"coordinate",
+												),
+											)
 											await this.browserSession.closeBrowser()
-											break
+											break // can't be within an inner switch
 										}
-										browserActionResult = await this.browserSession.click(coordinate)
-									} else if (action === "type") {
+									}
+									if (action === "type") {
 										if (!text) {
 											this.consecutiveMistakeCount++
-											pushToolResult(await this.sayAndCreateMissingParamError("browser_action", "text"))
+											pushToolResult(
+												await this.sayAndCreateMissingParamError("browser_action", "text"),
+											)
 											await this.browserSession.closeBrowser()
 											break
 										}
-										browserActionResult = await this.browserSession.type(text)
-									} else if (action === "scroll_down") {
-										browserActionResult = await this.browserSession.scrollDown()
-									} else if (action === "scroll_up") {
-										browserActionResult = await this.browserSession.scrollUp()
-									} else {
-										throw new Error(`Unsupported browser action: ${action}`)
+									}
+									this.consecutiveMistakeCount = 0
+									await this.say(
+										"browser_action",
+										JSON.stringify({
+											action: action as BrowserAction,
+											coordinate,
+											text,
+										} satisfies ClineSayBrowserAction),
+										undefined,
+										false,
+									)
+									switch (action) {
+										case "click":
+											browserActionResult = await this.browserSession.click(coordinate!)
+											break
+										case "type":
+											browserActionResult = await this.browserSession.type(text!)
+											break
+										case "scroll_down":
+											browserActionResult = await this.browserSession.scrollDown()
+											break
+										case "scroll_up":
+											browserActionResult = await this.browserSession.scrollUp()
+											break
+										case "close":
+											browserActionResult = await this.browserSession.closeBrowser()
+											break
 									}
 								}
 					
-								// Handle results for all actions except interactive mode close confirmation
-								if (action === "close" && !browserActionResult.logs?.includes("Would you like to:")) {
-									pushToolResult(formatResponse.toolResult("Browser has been closed."))
-								} else if (action !== "close") {
-									await this.say("browser_action_result", JSON.stringify(browserActionResult))
-									pushToolResult(
-										formatResponse.toolResult(
-											`The browser action has been executed. The console logs and screenshot have been captured for your analysis.\n\nConsole logs:\n${
-												browserActionResult.logs || "(No new logs)"
-											}\n\n${
-												this.isInteractiveMode ?
-												"The browser is in interactive mode. You can:\n1. Keep browsing\n2. Take another action\n3. Close the browser" :
-												"(REMEMBER: if you need to proceed to using non-`browser_action` tools or launch a new browser, you MUST first close this browser.)"
-											}`,
-											browserActionResult.screenshot ? [browserActionResult.screenshot] : []
+								switch (action) {
+									case "launch":
+									case "click":
+									case "type":
+									case "scroll_down":
+									case "scroll_up":
+										await this.say("browser_action_result", JSON.stringify(browserActionResult))
+										pushToolResult(
+											formatResponse.toolResult(
+												`The browser action has been executed. The console logs and screenshot have been captured for your analysis.\n\nConsole logs:\n${
+													browserActionResult.logs || "(No new logs)"
+												}\n\n(REMEMBER: if you need to proceed to using non-\`browser_action\` tools or launch a new browser, you MUST first close this browser. For example, if after analyzing the logs and screenshot you need to edit a file, you must first close the browser before you can use the write_to_file tool.)`,
+												browserActionResult.screenshot ? [browserActionResult.screenshot] : [],
+											),
 										)
-									)
+										break
+									case "close":
+										pushToolResult(
+											formatResponse.toolResult(
+												`The browser has been closed. You may now proceed to using other tools.`,
+											),
+										)
+										break
 								}
 								break
 							}
@@ -1831,10 +1817,14 @@ export class Cline {
 	async recursivelyMakeClineRequests(
 		userContent: UserContent,
 		includeFileDetails: boolean = false,
+		isInteractiveMode: boolean = false
 	): Promise<boolean> {
 		if (this.abort) {
 			throw new Error("Cline instance aborted")
 		}
+
+		// Store interactive mode state
+		this.isInteractiveMode = isInteractiveMode;
 
 		if (this.consecutiveMistakeCount >= 3) {
 			const { response, text, images } = await this.ask(
@@ -2084,7 +2074,7 @@ export class Cline {
 					this.consecutiveMistakeCount++
 				}
 
-				const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
+				const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent, false, this.isInteractiveMode)
 				didEndLoop = recDidEndLoop
 			} else {
 				// if there's no assistant_responses, that means we got no text or tool_use content blocks from API which we should assume is an error

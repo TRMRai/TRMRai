@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as fs from "fs/promises"
 import * as path from "path"
-import { Browser, Page, ScreenshotOptions, TimeoutError, launch } from "puppeteer"
+import { Browser, Page, ScreenshotOptions, TimeoutError, launch, connect } from "puppeteer"
 import pWaitFor from "p-wait-for"
 import delay from "delay"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -13,10 +13,6 @@ export class BrowserSession {
 	private page?: Page
 	private currentMousePosition?: string
 	private isInteractive: boolean = false
-	private lastInteractionTime: number = 0
-	private readonly TIMEOUT_MINUTES = 15
-	private closeRequested: boolean = false
-	private timeoutCheckInterval?: NodeJS.Timeout
 
 	constructor(context: vscode.ExtensionContext) {
 		this.context = context
@@ -24,45 +20,45 @@ export class BrowserSession {
 
 	async launchBrowser(interactive: boolean = false) {
 		console.log("launch browser called")
+		this.isInteractive = interactive
+
 		if (this.browser) {
 			await this.closeBrowser() // this may happen when the model launches a browser again after having used it already before
 		}
 
-		this.isInteractive = interactive
-
-		this.browser = await launch({
-			args: [
-				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-			],
-			defaultViewport: this.isInteractive ? { width: 1300, height: 1000 } : {
-				width: 900,
-				height: 600,
-			},
-			headless: false, // Always use non-headless mode
-		})
-		this.page = await this.browser?.newPage()
-
-		if (this.isInteractive && this.page) {
-			// Maximize the window to use full screen dimensions
-			const session = await this.page.target().createCDPSession()
-			const { windowId } = await session.send('Browser.getWindowForTarget')
-			await session.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal' } })
-
-			// Disable Puppeteer's automation features in interactive mode
-			await this.page.evaluate(() => {
-				// @ts-ignore
-				delete window.navigator.webdriver
+		if (this.isInteractive) {
+			try {
+				// Fetch the WebSocket endpoint from Chrome's debugging API
+				const response = await fetch('http://127.0.0.1:7333/json/version')
+				const data = await response.json()
+				const browserWSEndpoint = data.webSocketDebuggerUrl
+	
+				if (!browserWSEndpoint) {
+					throw new Error('Could not get WebSocket endpoint from Chrome debugging API')
+				}
+	
+				this.browser = await connect({
+					browserWSEndpoint,
+				})
+			} catch (error) {
+				console.error("Failed to connect to browser:", error)
+				throw new Error(`Failed to connect to browser: ${error.message}`)
+			}
+		} else {
+			this.browser = await launch({
+				args: [
+					"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+				],
+				defaultViewport: {
+					width: 900,
+					height: 600
+				},
+				headless: false, // Always use non-headless mode
 			})
+
 		}
 
-		// Reset flags
-		this.closeRequested = false
-		this.lastInteractionTime = Date.now()
-		
-		// Start timeout monitoring if not in interactive mode
-		if (!this.isInteractive) {
-			this.startTimeoutMonitoring()
-		}
+		this.page = await this.browser?.newPage()
 
 		return {
 			screenshot: "",
@@ -74,55 +70,14 @@ export class BrowserSession {
 		}
 	}
 
-	private startTimeoutMonitoring() {
-		// Clear any existing interval
-		if (this.timeoutCheckInterval) {
-			clearInterval(this.timeoutCheckInterval)
-		}
-
-		// Only start monitoring if not in interactive mode
-		if (!this.isInteractive) {
-			this.timeoutCheckInterval = setInterval(async () => {
-				const timeSinceLastInteraction = Date.now() - this.lastInteractionTime
-				if (timeSinceLastInteraction > this.TIMEOUT_MINUTES * 60 * 1000) {
-					if (this.timeoutCheckInterval) {
-						clearInterval(this.timeoutCheckInterval)
-					}
-					console.log("Browser timeout reached, closing...")
-					await this.closeBrowser()
-				}
-			}, 30000) // Check every 30 seconds
-		}
-	}
-
 	async closeBrowser(): Promise<BrowserActionResult> {
-		// If in interactive mode and close hasn't been requested yet, ask for confirmation
-		if (this.isInteractive && !this.closeRequested) {
-			console.log("Close requested but waiting for user confirmation...")
-			this.closeRequested = true
-			return {
-				logs: "Are you done using the browser? Please confirm to close it.",
-				screenshot: await this.getCurrentScreenshot(),
-				currentUrl: this.page?.url(),
-				currentMousePosition: this.currentMousePosition,
-			}
-		} 
 
-		// Only close if explicitly requested or not in interactive mode
-		if (!this.isInteractive || (this.isInteractive && this.closeRequested)) {
+		if(this.isInteractive) {
+			console.log("disconnecting browser...")
+			await this.browser?.disconnect().catch(() => {})
+		} else {
 			console.log("closing browser...")
 			await this.browser?.close().catch(() => {})
-			this.browser = undefined
-			this.page = undefined
-			this.currentMousePosition = undefined
-			this.isInteractive = false
-			this.closeRequested = false
-			
-			// Clear timeout monitoring
-			if (this.timeoutCheckInterval) {
-				clearInterval(this.timeoutCheckInterval)
-				this.timeoutCheckInterval = undefined
-			}
 		}
 		return {}
 	}
@@ -154,53 +109,13 @@ export class BrowserSession {
 		}
 	}
 
-	async handleNextStep(choice: string): Promise<BrowserActionResult> {
-		const normalizedChoice = choice.toLowerCase().trim()
-
-		if (normalizedChoice === "yes" || normalizedChoice === "done" || normalizedChoice === "confirm") {
-			await this.browser?.close().catch(() => {})
-			this.browser = undefined
-			this.page = undefined
-			this.currentMousePosition = undefined
-			this.isInteractive = false
-			this.closeRequested = false
-			
-			if (this.timeoutCheckInterval) {
-				clearInterval(this.timeoutCheckInterval)
-				this.timeoutCheckInterval = undefined
-			}
-			return {}
-		}
-
-		if (normalizedChoice === "no" || normalizedChoice === "continue") {
-			this.closeRequested = false
-			this.lastInteractionTime = Date.now()
-			return {
-				logs: "Browser session continued. Please confirm when you're done.",
-				screenshot: await this.getCurrentScreenshot(),
-				currentUrl: this.page?.url(),
-				currentMousePosition: this.currentMousePosition,
-			}
-		}
-
-		// Default response for unclear input
-		return {
-			logs: "Please confirm if you're done using the browser (yes/no).",
-			screenshot: await this.getCurrentScreenshot(),
-			currentUrl: this.page?.url(),
-			currentMousePosition: this.currentMousePosition,
-		}
-	}
-
 	async doAction(action: (page: Page) => Promise<void>): Promise<BrowserActionResult> {
+		
 		if (!this.page) {
 			throw new Error(
-				"Browser is not launched. This may occur if the browser was automatically closed by a non-`browser_action` tool.",
+				"Browser is not launched or connected. This may occur if the browser was automatically closed by a non-`browser_action` tool.",
 			)
 		}
-
-		// Update last interaction time
-		this.lastInteractionTime = Date.now()
 
 		const logs: string[] = []
 		let lastLogTs = Date.now()
@@ -224,31 +139,27 @@ export class BrowserSession {
 		this.page.on("pageerror", errorListener)
 
 		try {
-			if (!this.isInteractive) {
-				await action(this.page)
-			} else {
-				console.log("Browser actions cannot be performed in interactive mode. The user has manual control.")
-			}
+			await action(this.page)
 		} catch (err) {
 			if (!(err instanceof TimeoutError)) {
 				logs.push(`[Error] ${err.toString()}`)
 			}
 		}
-
+	
 		// Wait for console inactivity, with a timeout
 		await pWaitFor(() => Date.now() - lastLogTs >= 500, {
 			timeout: 3_000,
 			interval: 100,
 		}).catch(() => {})
-
+	
 		let screenshot = await this.getCurrentScreenshot()
 		if (!screenshot) {
 			throw new Error("Failed to take screenshot.")
 		}
-
+	
 		this.page.off("console", consoleListener)
 		this.page.off("pageerror", errorListener)
-
+	
 		return {
 			screenshot,
 			logs: logs.join("\n"),
