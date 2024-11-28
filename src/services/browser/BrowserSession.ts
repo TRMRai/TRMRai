@@ -13,14 +13,20 @@ export class BrowserSession {
 	private page?: Page
 	private currentMousePosition?: string
 	private isInteractive: boolean = false
+	private browserPort: string = '7333'
 
 	constructor(context: vscode.ExtensionContext) {
 		this.context = context
 	}
 
-	async launchBrowser(interactive: boolean = false) {
+	async launchBrowser(interactive: boolean = false, port?: string) {
 		console.log("launch browser called")
 		this.isInteractive = interactive
+
+		// Set browserPort if provided, otherwise use default
+		if (port) {
+			this.browserPort = port
+		}
 
 		if (this.browser) {
 			await this.closeBrowser() // this may happen when the model launches a browser again after having used it already before
@@ -29,20 +35,20 @@ export class BrowserSession {
 		if (this.isInteractive) {
 			try {
 				// Fetch the WebSocket endpoint from Chrome's debugging API
-				const response = await fetch('http://127.0.0.1:7333/json/version')
+				const response = await fetch(`http://127.0.0.1:${this.browserPort}/json/version`)
 				const data = await response.json()
 				const browserWSEndpoint = data.webSocketDebuggerUrl
 	
 				if (!browserWSEndpoint) {
-					throw new Error('Could not get WebSocket endpoint from Chrome debugging API')
+					throw new Error(`BrowserSession.ts :: launchBrowser :: Could not get webSocketDebuggerUrl from Chrome debugging API, port: ${this.browserPort}`)
 				}
 	
 				this.browser = await connect({
 					browserWSEndpoint,
 				})
 			} catch (error) {
-				console.error("Failed to connect to browser:", error)
-				throw new Error(`Failed to connect to browser: ${error.message}`)
+				console.error("BrowserSession.ts :: launchBrowser :: Failed to connect to browser, make sure you have a running browser with --remote-debugging-port=7333", error)
+				throw new Error(`BrowserSession.ts :: launchBrowser :: Failed to connect to browser: ${error.message}, make sure you have a running browser with --remote-debugging-port=7333`)
 			}
 		} else {
 			this.browser = await launch({
@@ -63,7 +69,7 @@ export class BrowserSession {
 		return {
 			screenshot: "",
 			logs: this.isInteractive ? 
-				"Browser launched in interactive mode. Please confirm when you're done using the browser." :
+				"Connected to browser in remote debugging mode." :
 				"Browser launched successfully.",
 			currentUrl: this.page?.url(),
 			currentMousePosition: this.currentMousePosition,

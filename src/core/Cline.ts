@@ -74,6 +74,7 @@ export class Cline {
 	private browserSession: BrowserSession
 	private didEditFile: boolean = false
 	private isInteractiveMode: boolean = false
+	private browserPort: string = '7333'
 	customInstructions?: string
 	alwaysAllowReadOnly: boolean
 	alwaysAllowWrite: boolean
@@ -669,16 +670,22 @@ export class Cline {
 			newUserContent.push(...formatResponse.imageBlocks(responseImages))
 		}
 		const wasInteractiveBrowser = (lastRelevantMessageIndex > 0) ? modifiedClineMessages[lastRelevantMessageIndex - 1].text?.includes("interactive mode") : false
+		let hadBrowserPort = '';
+		if ( wasInteractiveBrowser ) {
+			const match = modifiedClineMessages[lastRelevantMessageIndex - 1].text?.match(/\(browserPort\s*=\s*(\d+)\)/)
+			if (match) {
+				hadBrowserPort = match[1] ?? this.browserPort;
+				this.providerRef.deref()?.outputChannel.appendLine(`resumeTaskFromHistory :: browserPort :: ${hadBrowserPort}`)
+			}
+		}
 		await this.overwriteApiConversationHistory(modifiedApiConversationHistory)
-		await this.initiateTaskLoop(newUserContent, wasInteractiveBrowser)
+		await this.initiateTaskLoop(newUserContent, wasInteractiveBrowser, hadBrowserPort)
 	}
 
-	private async initiateTaskLoop(userContent: UserContent, wasInteractiveBrowser: boolean = false): Promise<void> {
+	private async initiateTaskLoop(userContent: UserContent, wasInteractiveBrowser: boolean = false, hadBrowserPort: string = ''): Promise<void> {
 		// Check if any text block contains "interactive mode"
 		const hasInteractiveMode = userContent.some((block) => {
 			if (block.type === "text" && typeof block.text === "string") {
-				this.providerRef.deref()?.outputChannel.appendLine(`initiateTaskLoop :: block.text :: ${block.text.toLowerCase()}`)
-
 				return (block.type === "text" && 
 					typeof block.text === "string" && 
 					block.text.toLowerCase().includes("interactive mode"))
@@ -693,6 +700,17 @@ export class Cline {
 		// Set interactive mode flag if found in text
 		if (hasInteractiveMode) {
 			this.isInteractiveMode = true;
+
+			// Parse browserPort if specified in text blocks
+			userContent.forEach((block) => {
+				if (block.type === "text" && typeof block.text === "string") {
+					const match = block.text.match(/\(browserPort\s*=\s*(\d+)\)/)
+					if (match) {
+						this.browserPort = match[1] ?? hadBrowserPort;
+						this.providerRef.deref()?.outputChannel.appendLine(`initiateTaskLoop :: browserPort :: ${this.browserPort}`)
+					}
+				}
+			})
 		}
 	
 		let nextUserContent = userContent;
@@ -701,7 +719,8 @@ export class Cline {
 			const didEndLoop = await this.recursivelyMakeClineRequests(
 				nextUserContent, 
 				includeFileDetails,
-				this.isInteractiveMode // Pass the flag to recursivelyMakeClineRequests
+				this.isInteractiveMode, // Pass the flag to recursivelyMakeClineRequests
+				this.browserPort // Pass the browserPort to recursivelyMakeClineRequests
 			)
 			includeFileDetails = false
 	
@@ -1493,7 +1512,7 @@ export class Cline {
 									// NOTE: it's okay that we call this message since the partial inspect_site is finished streaming. The only scenario we have to avoid is sending messages WHILE a partial message exists at the end of the messages array. For example the api_req_finished message would interfere with the partial message, so we needed to remove that.
 									// await this.say("inspect_site_result", "") // no result, starts the loading spinner waiting for result
 									await this.say("browser_action_result", "") // starts loading spinner
-									await this.browserSession.launchBrowser(this.isInteractiveMode)
+									await this.browserSession.launchBrowser(this.isInteractiveMode, this.browserPort)
 									browserActionResult = await this.browserSession.navigateToUrl(url)
 								} else {
 									if (action === "click") {
@@ -1817,7 +1836,8 @@ export class Cline {
 	async recursivelyMakeClineRequests(
 		userContent: UserContent,
 		includeFileDetails: boolean = false,
-		isInteractiveMode: boolean = false
+		isInteractiveMode: boolean = false,
+		browserPort: string = '7333'
 	): Promise<boolean> {
 		if (this.abort) {
 			throw new Error("Cline instance aborted")
@@ -2074,7 +2094,7 @@ export class Cline {
 					this.consecutiveMistakeCount++
 				}
 
-				const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent, false, this.isInteractiveMode)
+				const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent, false, this.isInteractiveMode, browserPort)
 				didEndLoop = recDidEndLoop
 			} else {
 				// if there's no assistant_responses, that means we got no text or tool_use content blocks from API which we should assume is an error
