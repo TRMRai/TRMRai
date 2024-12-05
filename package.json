@@ -1,9 +1,9 @@
 {
   "name": "roo-cline",
   "displayName": "Roo Cline",
-  "description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
+  "description": "A fork of Cline, an autonomous coding agent, with some added experimental configuration and automation features.",
   "publisher": "RooVeterinaryInc",
-  "version": "2.1.2", 
+  "version": "2.1.10",
   "files": [
     "assets/icons/icon_Roo.png"
   ],
@@ -13,7 +13,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "1.93.1"
+    "vscode": "^1.93.1"
   },
   "author": {
     "name": "Roo Vet"
@@ -22,7 +22,7 @@
     "type": "git",
     "url": "https://github.com/RooVetGit/Roo-Cline"
   },
-  "homepage": "https://cline.bot",
+  "homepage": "https://github.com/RooVetGit/Roo-Cline",
   "categories": [
     "AI",
     "Chat",
@@ -50,78 +50,89 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "claude-dev-ActivityBar",
-          "title": "Cline",
-          "icon": "$(robot)"
+          "id": "roo-cline-ActivityBar",
+          "title": "Roo Cline",
+          "icon": "$(rocket)"
         }
       ]
     },
     "views": {
-      "claude-dev-ActivityBar": [
+      "roo-cline-ActivityBar": [
         {
           "type": "webview",
-          "id": "claude-dev.SidebarProvider",
+          "id": "roo-cline.SidebarProvider",
           "name": ""
         }
       ]
     },
     "commands": [
       {
-        "command": "cline.plusButtonClicked",
+        "command": "roo-cline.plusButtonClicked",
         "title": "New Task",
         "icon": "$(add)"
       },
       {
-        "command": "cline.historyButtonClicked",
+        "command": "roo-cline.historyButtonClicked",
         "title": "History",
         "icon": "$(history)"
       },
       {
-        "command": "cline.popoutButtonClicked",
+        "command": "roo-cline.popoutButtonClicked",
         "title": "Open in Editor",
         "icon": "$(link-external)"
       },
       {
-        "command": "cline.settingsButtonClicked",
+        "command": "roo-cline.settingsButtonClicked",
         "title": "Settings",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "cline.openInNewTab",
+        "command": "roo-cline.openInNewTab",
         "title": "Open In New Tab",
-        "category": "Cline"
+        "category": "Roo Cline"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "cline.plusButtonClicked",
+          "command": "roo-cline.plusButtonClicked",
           "group": "navigation@1",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == roo-cline.SidebarProvider"
         },
         {
-          "command": "cline.historyButtonClicked",
+          "command": "roo-cline.historyButtonClicked",
           "group": "navigation@2",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == roo-cline.SidebarProvider"
         },
         {
-          "command": "cline.popoutButtonClicked",
+          "command": "roo-cline.popoutButtonClicked",
           "group": "navigation@3",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == roo-cline.SidebarProvider"
         },
         {
-          "command": "cline.settingsButtonClicked",
+          "command": "roo-cline.settingsButtonClicked",
           "group": "navigation@4",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == roo-cline.SidebarProvider"
         }
       ]
     },
     "configuration": {
+      "title": "RooCline",
       "properties": {
-        "cline.alwaysAllowBrowser": {
-          "type": "boolean",
-          "default": false,
-          "description": "Always allow browser actions without requiring confirmation"
+        "roo-cline.allowedCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm test",
+            "npm install",
+            "tsc",
+            "git log",
+            "git diff",
+            "git show"
+          ],
+          "description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
         }
       }
     }
@@ -193,6 +204,7 @@
     "p-wait-for": "^5.0.2",
     "pdf-parse": "^1.1.1",
     "puppeteer": "^23.9.0",
+    "play-sound": "^1.1.6",
     "serialize-error": "^11.0.3",
     "strip-ansi": "^7.1.0",
     "tree-sitter-wasms": "^0.1.11",

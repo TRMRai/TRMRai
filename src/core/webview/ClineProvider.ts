@@ -20,6 +20,7 @@ import { Cline } from "../Cline"
 import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
+import { playSound, setSoundEnabled } from "../../utils/sound"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -60,6 +61,8 @@ type GlobalStateKey =
 	| "azureApiVersion"
 	| "openRouterModelId"
 	| "openRouterModelInfo"
+	| "allowedCommands"
+	| "soundEnabled"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -68,8 +71,8 @@ export const GlobalFileNames = {
 }
 
 export class ClineProvider implements vscode.WebviewViewProvider {
-	public static readonly sideBarId = "claude-dev.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
-	public static readonly tabPanelId = "claude-dev.TabPanelProvider"
+	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
+	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
@@ -197,20 +200,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const { 
 			apiConfiguration, 
 			customInstructions, 
-			alwaysAllowReadOnly, 
-			alwaysAllowWrite, 
-			alwaysAllowExecute,
-			alwaysAllowBrowser 
 		} = await this.getState()
 		
 		this.cline = new Cline(
 			this, 
 			apiConfiguration, 
 			customInstructions, 
-			alwaysAllowReadOnly, 
-			alwaysAllowWrite, 
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
 			task, 
 			images
 		)
@@ -221,20 +216,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const { 
 			apiConfiguration, 
 			customInstructions, 
-			alwaysAllowReadOnly, 
-			alwaysAllowWrite, 
-			alwaysAllowExecute,
-			alwaysAllowBrowser 
 		} = await this.getState()
 		
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
 			customInstructions,
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
 			undefined,
 			undefined,
 			historyItem,
@@ -440,23 +427,18 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "alwaysAllowReadOnly":
 						await this.updateGlobalState("alwaysAllowReadOnly", message.bool ?? undefined)
-						if (this.cline) {
-							this.cline.alwaysAllowReadOnly = message.bool ?? false
-						}
 						await this.postStateToWebview()
 						break
 					case "alwaysAllowWrite":
 						await this.updateGlobalState("alwaysAllowWrite", message.bool ?? undefined)
-						if (this.cline) {
-							this.cline.alwaysAllowWrite = message.bool ?? false
-						}
 						await this.postStateToWebview()
 						break
 					case "alwaysAllowExecute":
 						await this.updateGlobalState("alwaysAllowExecute", message.bool ?? undefined)
-						if (this.cline) {
-							this.cline.alwaysAllowExecute = message.bool ?? false
-						}
+						await this.postStateToWebview()
+						break
+					case "alwaysAllowBrowser":
+						await this.updateGlobalState("alwaysAllowBrowser", message.bool ?? undefined)
 						await this.postStateToWebview()
 						break
 					case "askResponse":
@@ -531,15 +513,27 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 
 						break
-					case "alwaysAllowBrowser":
-						await this.updateGlobalState("alwaysAllowBrowser", message.bool ?? undefined)
-						if (this.cline) {
-							this.cline.alwaysAllowBrowser = message.bool ?? false
-						}
-						await this.postStateToWebview()
-						break
+					case "allowedCommands":
+						await this.context.globalState.update('allowedCommands', message.commands);
+						// Also update workspace settings
+						await vscode.workspace
+							.getConfiguration('roo-cline')
+							.update('allowedCommands', message.commands, vscode.ConfigurationTarget.Global);
+						break;
 					// Add more switch case statements here as more webview message commands
 					// are created within the webview context (i.e. inside media/main.js)
+					case "playSound":
+						if (message.audioType) {
+							const soundPath = path.join(this.context.extensionPath, "audio", `${message.audioType}.wav`)
+							playSound(soundPath)
+						}
+						break
+					case "soundEnabled":
+						const enabled = message.bool ?? true
+						await this.updateGlobalState("soundEnabled", enabled)
+						setSoundEnabled(enabled)
+						await this.postStateToWebview()
+						break
 				}
 			},
 			null,
@@ -840,14 +834,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const { 
 			apiConfiguration, 
 			lastShownAnnouncementId, 
-			customInstructions, 
-			alwaysAllowReadOnly, 
-			alwaysAllowWrite, 
+			customInstructions,
+			alwaysAllowReadOnly,
+			alwaysAllowWrite,
 			alwaysAllowExecute,
-			alwaysAllowBrowser, 
-			taskHistory 
+			alwaysAllowBrowser,
+			soundEnabled,
+			taskHistory,
 		} = await this.getState()
 		
+		const allowedCommands = vscode.workspace
+			.getConfiguration('roo-cline')
+			.get<string[]>('allowedCommands') || []
+
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
 			apiConfiguration,
@@ -861,7 +860,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			taskHistory: (taskHistory || [])
 				.filter((item) => item.ts && item.task)
 				.sort((a, b) => b.ts - a.ts),
+			soundEnabled: soundEnabled ?? true,
 			shouldShowAnnouncement: lastShownAnnouncementId !== this.latestAnnouncementId,
+			allowedCommands,
 		}
 	}
 
@@ -947,8 +948,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowReadOnly,
 			alwaysAllowWrite,
 			alwaysAllowExecute,
-			taskHistory,
 			alwaysAllowBrowser,
+			taskHistory,
+			allowedCommands,
+			soundEnabled,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -979,8 +982,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("alwaysAllowReadOnly") as Promise<boolean | undefined>,
 			this.getGlobalState("alwaysAllowWrite") as Promise<boolean | undefined>,
 			this.getGlobalState("alwaysAllowExecute") as Promise<boolean | undefined>,
-			this.getGlobalState("taskHistory") as Promise<HistoryItem[] | undefined>,
 			this.getGlobalState("alwaysAllowBrowser") as Promise<boolean | undefined>,
+			this.getGlobalState("taskHistory") as Promise<HistoryItem[] | undefined>,
+			this.getGlobalState("allowedCommands") as Promise<string[] | undefined>,
+			this.getGlobalState("soundEnabled") as Promise<boolean | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -1031,6 +1036,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowExecute: alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			taskHistory,
+			allowedCommands,
+			soundEnabled,
 		}
 	}
 
