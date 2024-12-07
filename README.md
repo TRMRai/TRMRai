@@ -1,64 +1,44 @@
 # Roo-Cline
 
-## Roo Packaging and Installation
+### Installation
+If you want to install the latest extension from the Marketplace, just search for "Roo Cline" in your VSCode-compatible editor's Extensions panel (Cmd/Ctrl+Shift+X).
 
-### Setup
+After installation, Roo Cline will appear in your VSCode-compatible editor's installed extensions list. You can verify this by opening your editor's Extensions panel (Cmd/Ctrl+Shift+X) and checking under the "Installed" section.
 
-- Install dependencies:
+### Testing Builds
+1. Install dependencies:
    ```bash
    npm run install:all
    ```
-- Now you can either:
-  1. Install the latest extension from `bin/roo-cline-<latest_version>.vsix`, skip the packaging steps below
-  2. Or build the extension from source and proceed to the packaging steps below
 
-
-### Packaging
-1. **If** you have new changes, bump the version in `package.json`
-    - Remove the old VSIX file:
-    ```bash
-    rm bin/roo-cline-*.vsix
-    ```
 2. Build the VSIX file:
    ```bash
    npm run build
    ```
 3. The new VSIX file will be created in the `bin/` directory
-4. Commit the new VSIX file to git:
-   ```bash
-   git add bin/*.vsix
-   git commit -m "chore: update VSIX to version <new_version>"
-   ```
+4. Install the extension from the VSIX file as described below:
 
-### Installation
-- **Option 1:** Follow these [instructions](https://www.cursor.com/how-to-install-extension) to manually drag the `.vsix` file into Cursor's Extensions panel (Cmd/Ctrl+Shift+X) and install it.
+   - **Option 1:** Drag and drop the `.vsix` file into your VSCode-compatible editor's Extensions panel (Cmd/Ctrl+Shift+X).
 
-- **Option 2:** Make sure you have the Cursor CLI installed and in your PATH.
-  `export PATH="$PATH:/Applications/Cursor.app/Contents/MacOS"`
-- Install the plugin using the Cursor CLI:
+   - **Option 2:** Install the plugin using the CLI, make sure you have your VSCode-compatible CLI installed and in your `PATH` variable. Cursor example: `export PATH="$PATH:/Applications/Cursor.app/Contents/MacOS"`
 
     ```bash
-    cursor --install-extension bin/roo-cline-<latest_version>.vsix
     # Ex: cursor --install-extension bin/roo-cline-2.0.1.vsix
+    # Ex: code --install-extension bin/roo-cline-2.0.1.vsix
     ```
 
-**Note:** The VSIX file is checked into the git repository's `bin/` directory for easy distribution.
-
-After installation, Roo Cline will appear in your VSCode-compatible editor's installed extensions list. You can verify this by opening your editor's Extensions panel (Cmd/Ctrl+Shift+X) and checking under the "Installed" section.
-
 ### Publishing
-
 We use [changesets](https://github.com/changesets/changesets) for versioning and publishing this package. To make changes:
 
 1. Create a PR with your changes
 2. Create a new changeset by running `npm run changeset`
    - Select the appropriate kind of change - `patch` for bug fixes, `minor` for new features, or `major` for breaking changes
    - Write a clear description of your changes that will be included in the changelog
-3. Get the PR approved
+3. Get the PR approved and pass all checks
 4. Merge it
 
 Once your merge is successful:
-- The release workflow will automatically create a new "Version Packages" PR
+- The release workflow will automatically create a new "Changeset version bump" PR
 - This PR will:
   - Update the version based on your changeset
   - Update the CHANGELOG.md file
