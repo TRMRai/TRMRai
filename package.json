@@ -7,7 +7,7 @@
   "files": [
     "assets/icons/icon_Roo.png"
   ],
-  "icon": "assets/icons/icon_Roo.png",
+  "icon": "assets/icons/rocket.png",
   "galleryBanner": {
     "color": "#617A91",
     "theme": "dark"
@@ -151,7 +151,7 @@
     "start:webview": "cd webview-ui && npm run start",
     "test": "vscode-test",
     "test:webview": "cd webview-ui && npm run test",
-    "publish:marketplace": "vsce publish && ovsx publish",
+    "publish:marketplace": "vsce publish",
     "publish": "npm run build && changeset publish && npm install --package-lock-only",
     "version-packages": "changeset version && npm install --package-lock-only",
     "vscode:prepublish": "npm run package",
