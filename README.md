@@ -14,11 +14,12 @@ Here's an example of Roo-Cline autonomously creating a snake game with "Always a
 
 https://github.com/user-attachments/assets/c2bb31dc-e9b2-4d73-885d-17f1471a4987
 
-### Installation
-If you want to install the latest extension from the Marketplace, just search for "Roo Cline" in your VSCode-compatible editor's Extensions panel (Cmd/Ctrl+Shift+X).
+## Contributing
+To contribute to the project, start by exploring [open issues](https://github.com/RooVetGit/Roo-Cline/issues) or checking our [feature request board](https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop). We'd also love to have you join our [Discord](https://discord.gg/cline) to share ideas and connect with other contributors.
 
+<details>
+<summary>Local Setup</summary>
 
-### Testing Builds
 1. Install dependencies:
    ```bash
    npm run install:all
@@ -40,7 +41,12 @@ If you want to install the latest extension from the Marketplace, just search fo
     # Ex: code --install-extension bin/roo-cline-2.0.1.vsix
     ```
 
-### Publishing
+5. Launch by pressing `F5` (or `Run`->`Start Debugging`) to open a new VSCode window with the extension loaded. (You may need to install the [esbuild problem matchers extension](https://marketplace.visualstudio.com/items?itemName=connor4312.esbuild-problem-matchers) if you run into issues building the project.)
+
+</details>
+
+<details>
+<summary>Publishing</summary>
 We use [changesets](https://github.com/changesets/changesets) for versioning and publishing this package. To make changes:
 
 1. Create a PR with your changes
@@ -54,34 +60,15 @@ Once your merge is successful:
 - The release workflow will automatically create a new "Changeset version bump" PR
 - This PR will:
   - Update the version based on your changeset
-  - Update the CHANGELOG.md file
+  - Update the `CHANGELOG.md` file
   - Create a git tag
 - The PR will be automatically approved and merged
-- A new version will be published
+- A new version and git release will be published
 
-### Browser Actions
+</details>
 
-The browser action tool allows Cline to interact with web pages through a Puppeteer-controlled browser. This can be used in two modes:
-
-#### Interactive Mode
-- Triggered by adding the string `interactive mode` to your prompt, it also requires the string `(browserPort = 7333)`, where the port number can be modified.
-- Requires a browser instance running on the specified port, ex: `/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary --remote-debugging-port=7333`
-- Useful for debugging and development scenarios where you need to interact with a running browser
-
-#### Non-Interactive Mode
-- Default mode when no `interactive mode` string is present in your prompt
-- Launches a new browser instance for each session
-- Better suited for quick simple browser tasks, ex: testing a URL
-
-The browser action, in both modes, supports operations like:
-- Launching a browser at a specified URL
-- Clicking elements at specific coordinates
-- Typing text
-- Scrolling the page
-- Capturing screenshots and console logs
-- Closing the browser
-
-Each browser action provides feedback through screenshots and console logs, allowing for detailed interaction tracking and debugging.
+## Stay Updated!
+Subscribe to our [Github releases](https://github.com/RooVetGit/Roo-Cline/releases) to keep up with the latest updates! You can also view our [CHANGELOG.md](Roo-Cline/CHANGELOG.md) for more details.
 
 ---
 
@@ -181,30 +168,3 @@ Try asking Cline to "test the app", and watch as he runs a command like `npm run
 -   **`@problems`:** Add workspace errors and warnings ('Problems' panel) for Cline to fix
 -   **`@file`:** Adds a file's contents so you don't have to waste API requests approving read file (+ type to search files)
 -   **`@folder`:** Adds folder's files all at once to speed up your workflow even more
-
-## Contributing
-
-To contribute to the project, start by exploring [open issues](https://github.com/cline/cline/issues) or checking our [feature request board](https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop). We'd also love to have you join our [Discord](https://discord.gg/cline) to share ideas and connect with other contributors. If you're interested in joining the team, check out our [careers page](https://cline.bot/join-us)!
-
-<details>
-<summary>Local Development Instructions</summary>
-
-1. Clone the repository _(Requires [git-lfs](https://git-lfs.com/))_:
-    ```bash
-    git clone https://github.com/cline/cline.git
-    ```
-2. Open the project in VSCode:
-    ```bash
-    code cline
-    ```
-3. Install the necessary dependencies for the extension and webview-gui:
-    ```bash
-    npm run install:all
-    ```
-4. Launch by pressing `F5` (or `Run`->`Start Debugging`) to open a new VSCode window with the extension loaded. (You may need to install the [esbuild problem matchers extension](https://marketplace.visualstudio.com/items?itemName=connor4312.esbuild-problem-matchers) if you run into issues building the project.)
-
-</details>
-
-## License
-
-[Apache 2.0 © 2024 Cline Bot Inc.](./LICENSE)

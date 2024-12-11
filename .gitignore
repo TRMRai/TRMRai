@@ -9,6 +9,6 @@ node_modules
 bin
 roo-cline-*.vsix
 
-# Prompts
+# Local prompts
 prompts
 .clinerules
