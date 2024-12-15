@@ -1,5 +1,9 @@
 # Roo Cline Changelog
 
+## [2.2.7]
+
+-   Revert the change to encourage diff edits - previous balance was better
+
 ## [2.2.6]
 
 -   Add a fuzzy match tolerance when applying diffs
