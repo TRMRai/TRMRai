@@ -48,7 +48,7 @@ export class OpenAiNativeHandler implements ApiHandler {
 						} as ApiStreamChunk;
 					})();
 				}, {
-					maxRetries: 5,
+					maxRetries: 10,
 					initialDelayMs: 2000,
 					onRetry: (error, attempt, delayMs) => {
 						console.log(`OpenAI Native request failed (attempt ${attempt})`);
@@ -94,7 +94,7 @@ export class OpenAiNativeHandler implements ApiHandler {
 						}
 					})();
 				}, {
-					maxRetries: 5,
+					maxRetries: 10,
 					initialDelayMs: 2000,
 					onRetry: (error, attempt, delayMs) => {
 						console.log(`OpenAI Native request failed (attempt ${attempt})`);

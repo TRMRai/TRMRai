@@ -81,7 +81,7 @@ export class VertexHandler implements ApiHandler {
 				}
 			})();
 		}, {
-			maxRetries: 5,
+			maxRetries: 10,
 			initialDelayMs: 2000,
 			onRetry: (error, attempt, delayMs) => {
 				console.log(`Vertex request failed (attempt ${attempt})`);

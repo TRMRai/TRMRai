@@ -55,7 +55,7 @@ describe('withRetry', () => {
     const result: ApiStreamChunk[] = [];
 
     for await (const chunk of withRetry(operation, {
-      maxRetries: 5,
+      maxRetries: 10,
       initialDelayMs: 1000,
       onRetry
     })) {

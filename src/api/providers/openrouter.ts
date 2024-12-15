@@ -174,7 +174,7 @@ export class OpenRouterHandler implements ApiHandler {
 				} as ApiStreamChunk;
 			})();
 		}, {
-			maxRetries: 5,
+			maxRetries: 10,
 			initialDelayMs: 2000,
 			onRetry: (error, attempt, delayMs) => {
 				console.log(`OpenRouter request failed (attempt ${attempt})`);

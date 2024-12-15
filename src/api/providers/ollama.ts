@@ -51,7 +51,7 @@ export class OllamaHandler implements ApiHandler {
 				}
 			})();
 		}, {
-			maxRetries: 5,
+			maxRetries: 10,
 			initialDelayMs: 2000,
 			onRetry: (error, attempt, delayMs) => {
 				console.log(`Ollama request failed (attempt ${attempt})`);
