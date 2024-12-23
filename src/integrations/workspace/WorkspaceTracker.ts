@@ -37,6 +37,27 @@ class WorkspaceTracker {
 		// Listen for file renaming
 		this.disposables.push(vscode.workspace.onDidRenameFiles(this.onFilesRenamed.bind(this)))
 
+		// Also set up a periodic refresh
+		const refreshInterval = setInterval(async () => {
+			if (cwd) {
+				const [files, _] = await listFiles(cwd, true, 1_000);
+				let hadNewFiles = false;
+				files.forEach((file) => {
+					const normalized = this.normalizeFilePath(file);
+					if (!this.filePaths.has(normalized)) {
+						this.filePaths.add(normalized);
+						hadNewFiles = true;
+					}
+				});
+				if (hadNewFiles) {
+					this.workspaceDidUpdate();
+				}
+			}
+		}, 1000); // Check every second
+		
+		// Clean up the interval when disposed
+		this.disposables.push({ dispose: () => clearInterval(refreshInterval) });
+
 		/*
 		 An event that is emitted when a workspace folder is added or removed.
 		 **Note:** this event will not fire if the first workspace folder is added, removed or changed,
