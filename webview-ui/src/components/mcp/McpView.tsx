@@ -1,10 +1,4 @@
-import {
-	VSCodeButton,
-	VSCodeLink,
-	VSCodePanels,
-	VSCodePanelTab,
-	VSCodePanelView,
-} from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeLink, VSCodePanels, VSCodePanelTab, VSCodePanelView } from "@vscode/webview-ui-toolkit/react"
 import { useState } from "react"
 import { vscode } from "../../utils/vscode"
 import { useExtensionState } from "../../context/ExtensionStateContext"
@@ -113,13 +107,12 @@ const McpView = ({ onDone }: McpViewProps) => {
 					<VSCodeLink href="https://github.com/modelcontextprotocol" style={{ display: "inline" }}>
 						Model Context Protocol
 					</VSCodeLink>{" "}
-					enables communication with locally running MCP servers that provide additional tools and resources
-					to extend Cline's capabilities. You can use{" "}
+					enables communication with locally running MCP servers that provide additional tools and resources to extend
+					Cline's capabilities. You can use{" "}
 					<VSCodeLink href="https://github.com/modelcontextprotocol/servers" style={{ display: "inline" }}>
 						community-made servers
 					</VSCodeLink>{" "}
-					or ask Cline to create new tools specific to your workflow (e.g., "add a tool that gets the latest
-					npm docs").{" "}
+					or ask Cline to create new tools specific to your workflow (e.g., "add a tool that gets the latest npm docs").{" "}
 					<VSCodeLink href="https://x.com/sdrzn/status/1867271665086074969" style={{ display: "inline" }}>
 						See a demo here.
 					</VSCodeLink>
@@ -195,10 +188,7 @@ const ServerRow = ({ server }: { server: McpServer }) => {
 				}}
 				onClick={handleRowClick}>
 				{!server.error && (
-					<span
-						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
-						style={{ marginRight: "8px" }}
-					/>
+					<span className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`} style={{ marginRight: "8px" }} />
 				)}
 				<span style={{ flex: 1 }}>{server.name}</span>
 				<div
@@ -250,14 +240,12 @@ const ServerRow = ({ server }: { server: McpServer }) => {
 						<VSCodePanels>
 							<VSCodePanelTab id="tools">Tools ({server.tools?.length || 0})</VSCodePanelTab>
 							<VSCodePanelTab id="resources">
-								Resources (
-								{[...(server.resourceTemplates || []), ...(server.resources || [])].length || 0})
+								Resources ({[...(server.resourceTemplates || []), ...(server.resources || [])].length || 0})
 							</VSCodePanelTab>
 
 							<VSCodePanelView id="tools-view">
 								{server.tools && server.tools.length > 0 ? (
-									<div
-										style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+									<div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
 										{server.tools.map((tool) => (
 											<McpToolRow key={tool.name} tool={tool} />
 										))}
@@ -272,16 +260,13 @@ const ServerRow = ({ server }: { server: McpServer }) => {
 							<VSCodePanelView id="resources-view">
 								{(server.resources && server.resources.length > 0) ||
 								(server.resourceTemplates && server.resourceTemplates.length > 0) ? (
-									<div
-										style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
-										{[...(server.resourceTemplates || []), ...(server.resources || [])].map(
-											(item) => (
-												<McpResourceRow
-													key={"uriTemplate" in item ? item.uriTemplate : item.uri}
-													item={item}
-												/>
-											),
-										)}
+									<div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+										{[...(server.resourceTemplates || []), ...(server.resources || [])].map((item) => (
+											<McpResourceRow
+												key={"uriTemplate" in item ? item.uriTemplate : item.uri}
+												item={item}
+											/>
+										))}
 									</div>
 								) : (
 									<div style={{ padding: "10px 0", color: "var(--vscode-descriptionForeground)" }}>

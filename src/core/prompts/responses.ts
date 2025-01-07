@@ -31,10 +31,7 @@ Otherwise, if you have not completed the task and do not need additional informa
 	invalidMcpToolArgumentError: (serverName: string, toolName: string) =>
 		`Invalid JSON argument used with ${serverName} for ${toolName}. Please retry with a properly formatted JSON argument.`,
 
-	toolResult: (
-		text: string,
-		images?: string[],
-	): string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam> => {
+	toolResult: (text: string, images?: string[]): string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam> => {
 		if (images && images.length > 0) {
 			const textBlock: Anthropic.TextBlockParam = { type: "text", text }
 			const imageBlocks: Anthropic.ImageBlockParam[] = formatImagesIntoBlocks(images)

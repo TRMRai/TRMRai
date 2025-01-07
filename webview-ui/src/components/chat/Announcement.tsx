@@ -23,10 +23,7 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 				position: "relative",
 				flexShrink: 0,
 			}}>
-			<VSCodeButton
-				appearance="icon"
-				onClick={hideAnnouncement}
-				style={{ position: "absolute", top: "8px", right: "8px" }}>
+			<VSCodeButton appearance="icon" onClick={hideAnnouncement} style={{ position: "absolute", top: "8px", right: "8px" }}>
 				<span className="codicon codicon-close"></span>
 			</VSCodeButton>
 			<h3 style={{ margin: "0 0 8px" }}>
@@ -34,17 +31,16 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 			</h3>
 			<ul style={{ margin: "0 0 8px", paddingLeft: "12px" }}>
 				<li>
-					<b>Auto-approve menu:</b> You can now specify which tools require approval, set a max # of
-					auto-approved API requests, and enable system notifications for when Cline completes a task.
+					<b>Auto-approve menu:</b> You can now specify which tools require approval, set a max # of auto-approved API
+					requests, and enable system notifications for when Cline completes a task.
 				</li>
 				<li>
-					<b>New diff editing for large files:</b> Cline now uses an efficient search & replace approach when
-					modifying large files for faster, more reliable edits (no more "
-					<code>{"// rest of code here"}</code>" deletions).
+					<b>New diff editing for large files:</b> Cline now uses an efficient search & replace approach when modifying
+					large files for faster, more reliable edits (no more "<code>{"// rest of code here"}</code>" deletions).
 				</li>
 				<li>
-					<b>.clinerules:</b> Add a root-level <code>.clinerules</code> file to specify custom instructions
-					for the project.
+					<b>.clinerules:</b> Add a root-level <code>.clinerules</code> file to specify custom instructions for the
+					project.
 				</li>
 			</ul>
 			<p style={{ margin: "5px 0px", fontWeight: "bold" }}>v2.2 Updates:</p>
@@ -54,12 +50,12 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 					<VSCodeLink href="https://github.com/modelcontextprotocol/servers" style={{ display: "inline" }}>
 						MCP servers
 					</VSCodeLink>
-					by clicking the new <span className="codicon codicon-server" style={{ fontSize: "10px" }}></span>{" "}
-					icon in the menu bar.
+					by clicking the new <span className="codicon codicon-server" style={{ fontSize: "10px" }}></span> icon in the
+					menu bar.
 				</li>
 				<li>
-					Cline can also create custom tools–just say "add a tool that...", and watch him create the MCP
-					server and install it in the extension, ready to use in future tasks.
+					Cline can also create custom tools–just say "add a tool that...", and watch him create the MCP server and
+					install it in the extension, ready to use in future tasks.
 				</li>
 				<li>
 					Try it yourself by asking Cline to "add a tool that gets the latest npm docs", or

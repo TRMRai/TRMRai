@@ -165,13 +165,9 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 								/>
 							)}
 						{(option.type === ContextMenuOptionType.Problems ||
-							((option.type === ContextMenuOptionType.File ||
-								option.type === ContextMenuOptionType.Folder) &&
+							((option.type === ContextMenuOptionType.File || option.type === ContextMenuOptionType.Folder) &&
 								option.value)) && (
-							<i
-								className="codicon codicon-add"
-								style={{ fontSize: "14px", flexShrink: 0, marginLeft: 8 }}
-							/>
+							<i className="codicon codicon-add" style={{ fontSize: "14px", flexShrink: 0, marginLeft: 8 }} />
 						)}
 					</div>
 				))}

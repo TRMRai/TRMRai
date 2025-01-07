@@ -150,9 +150,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 								minWidth: 0, // This allows the div to shrink below its content size
 							}}>
 							<span style={{ fontWeight: "bold" }}>Task{!isTaskExpanded && ":"}</span>
-							{!isTaskExpanded && (
-								<span style={{ marginLeft: 4 }}>{highlightMentions(task.text, false)}</span>
-							)}
+							{!isTaskExpanded && <span style={{ marginLeft: 4 }}>{highlightMentions(task.text, false)}</span>}
 						</div>
 					</div>
 					{!isTaskExpanded && isCostAvailable && (
@@ -213,8 +211,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 										style={{
 											width: 30,
 											height: "1.2em",
-											background:
-												"linear-gradient(to right, transparent, var(--vscode-badge-background))",
+											background: "linear-gradient(to right, transparent, var(--vscode-badge-background))",
 										}}
 									/>
 									<div

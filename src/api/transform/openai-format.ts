@@ -146,9 +146,7 @@ export function convertToOpenAiMessages(
 }
 
 // Convert OpenAI response to Anthropic format
-export function convertToAnthropicMessage(
-	completion: OpenAI.Chat.Completions.ChatCompletion,
-): Anthropic.Messages.Message {
+export function convertToAnthropicMessage(completion: OpenAI.Chat.Completions.ChatCompletion): Anthropic.Messages.Message {
 	const openAiMessage = completion.choices[0].message
 	const anthropicMessage: Anthropic.Messages.Message = {
 		id: completion.id,

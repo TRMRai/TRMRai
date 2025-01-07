@@ -20,12 +20,7 @@ export interface ExtensionMessage {
 		| "openRouterModels"
 		| "mcpServers"
 	text?: string
-	action?:
-		| "chatButtonClicked"
-		| "mcpButtonClicked"
-		| "settingsButtonClicked"
-		| "historyButtonClicked"
-		| "didBecomeVisible"
+	action?: "chatButtonClicked" | "mcpButtonClicked" | "settingsButtonClicked" | "historyButtonClicked" | "didBecomeVisible"
 	invoke?: "sendMessage" | "primaryButtonClick" | "secondaryButtonClick"
 	state?: ExtensionState
 	images?: string[]

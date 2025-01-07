@@ -33,10 +33,7 @@ import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { vscode } from "../../utils/vscode"
 import VSCodeButtonLink from "../common/VSCodeButtonLink"
-import OpenRouterModelPicker, {
-	ModelDescriptionMarkdown,
-	OPENROUTER_MODEL_PICKER_Z_INDEX,
-} from "./OpenRouterModelPicker"
+import OpenRouterModelPicker, { ModelDescriptionMarkdown, OPENROUTER_MODEL_PICKER_Z_INDEX } from "./OpenRouterModelPicker"
 
 interface ApiOptionsProps {
 	showModelOptions: boolean
@@ -238,9 +235,7 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 						}}>
 						This key is stored locally and only used to make API requests from this extension.
 						{!apiConfiguration?.deepSeekApiKey && (
-							<VSCodeLink
-								href="https://www.deepseek.com/"
-								style={{ display: "inline", fontSize: "inherit" }}>
+							<VSCodeLink href="https://www.deepseek.com/" style={{ display: "inline", fontSize: "inherit" }}>
 								You can get a DeepSeek API key by signing up here.
 							</VSCodeLink>
 						)}
@@ -360,9 +355,9 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 							marginTop: "5px",
 							color: "var(--vscode-descriptionForeground)",
 						}}>
-						Authenticate by either providing the keys above or use the default AWS credential providers,
-						i.e. ~/.aws/credentials or environment variables. These credentials are only used locally to
-						make API requests from this extension.
+						Authenticate by either providing the keys above or use the default AWS credential providers, i.e.
+						~/.aws/credentials or environment variables. These credentials are only used locally to make API requests
+						from this extension.
 					</p>
 				</div>
 			)}
@@ -403,9 +398,7 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 						<VSCodeLink
 							href="https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude#before_you_begin"
 							style={{ display: "inline", fontSize: "inherit" }}>
-							{
-								"1) create a Google Cloud account › enable the Vertex AI API › enable the desired Claude models,"
-							}
+							{"1) create a Google Cloud account › enable the Vertex AI API › enable the desired Claude models,"}
 						</VSCodeLink>{" "}
 						<VSCodeLink
 							href="https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp"
@@ -434,9 +427,7 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 						}}>
 						This key is stored locally and only used to make API requests from this extension.
 						{!apiConfiguration?.geminiApiKey && (
-							<VSCodeLink
-								href="https://ai.google.dev/"
-								style={{ display: "inline", fontSize: "inherit" }}>
+							<VSCodeLink href="https://ai.google.dev/" style={{ display: "inline", fontSize: "inherit" }}>
 								You can get a Gemini API key by signing up here.
 							</VSCodeLink>
 						)}
@@ -495,8 +486,8 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 							color: "var(--vscode-descriptionForeground)",
 						}}>
 						<span style={{ color: "var(--vscode-errorForeground)" }}>
-							(<span style={{ fontWeight: 500 }}>Note:</span> Cline uses complex prompts and works best
-							with Claude models. Less capable models may not work as expected.)
+							(<span style={{ fontWeight: 500 }}>Note:</span> Cline uses complex prompts and works best with Claude
+							models. Less capable models may not work as expected.)
 						</span>
 					</p>
 				</div>
@@ -536,10 +527,7 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 								}
 							}}>
 							{lmStudioModels.map((model) => (
-								<VSCodeRadio
-									key={model}
-									value={model}
-									checked={apiConfiguration?.lmStudioModelId === model}>
+								<VSCodeRadio key={model} value={model} checked={apiConfiguration?.lmStudioModelId === model}>
 									{model}
 								</VSCodeRadio>
 							))}
@@ -551,8 +539,8 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 							marginTop: "5px",
 							color: "var(--vscode-descriptionForeground)",
 						}}>
-						LM Studio allows you to run models locally on your computer. For instructions on how to get
-						started, see their
+						LM Studio allows you to run models locally on your computer. For instructions on how to get started, see
+						their
 						<VSCodeLink href="https://lmstudio.ai/docs" style={{ display: "inline", fontSize: "inherit" }}>
 							quickstart guide.
 						</VSCodeLink>
@@ -564,8 +552,8 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 						</VSCodeLink>{" "}
 						feature to use it with this extension.{" "}
 						<span style={{ color: "var(--vscode-errorForeground)" }}>
-							(<span style={{ fontWeight: 500 }}>Note:</span> Cline uses complex prompts and works best
-							with Claude models. Less capable models may not work as expected.)
+							(<span style={{ fontWeight: 500 }}>Note:</span> Cline uses complex prompts and works best with Claude
+							models. Less capable models may not work as expected.)
 						</span>
 					</p>
 				</div>
@@ -605,10 +593,7 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 								}
 							}}>
 							{ollamaModels.map((model) => (
-								<VSCodeRadio
-									key={model}
-									value={model}
-									checked={apiConfiguration?.ollamaModelId === model}>
+								<VSCodeRadio key={model} value={model} checked={apiConfiguration?.ollamaModelId === model}>
 									{model}
 								</VSCodeRadio>
 							))}
@@ -620,16 +605,16 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 							marginTop: "5px",
 							color: "var(--vscode-descriptionForeground)",
 						}}>
-						Ollama allows you to run models locally on your computer. For instructions on how to get
-						started, see their
+						Ollama allows you to run models locally on your computer. For instructions on how to get started, see
+						their
 						<VSCodeLink
 							href="https://github.com/ollama/ollama/blob/main/README.md"
 							style={{ display: "inline", fontSize: "inherit" }}>
 							quickstart guide.
 						</VSCodeLink>
 						<span style={{ color: "var(--vscode-errorForeground)" }}>
-							(<span style={{ fontWeight: 500 }}>Note:</span> Cline uses complex prompts and works best
-							with Claude models. Less capable models may not work as expected.)
+							(<span style={{ fontWeight: 500 }}>Note:</span> Cline uses complex prompts and works best with Claude
+							models. Less capable models may not work as expected.)
 						</span>
 					</p>
 				</div>
@@ -756,26 +741,25 @@ export const ModelInfoView = ({
 		),
 		modelInfo.supportsPromptCache && modelInfo.cacheWritesPrice && (
 			<span key="cacheWritesPrice">
-				<span style={{ fontWeight: 500 }}>Cache writes price:</span>{" "}
-				{formatPrice(modelInfo.cacheWritesPrice || 0)}/million tokens
+				<span style={{ fontWeight: 500 }}>Cache writes price:</span> {formatPrice(modelInfo.cacheWritesPrice || 0)}
+				/million tokens
 			</span>
 		),
 		modelInfo.supportsPromptCache && modelInfo.cacheReadsPrice && (
 			<span key="cacheReadsPrice">
-				<span style={{ fontWeight: 500 }}>Cache reads price:</span>{" "}
-				{formatPrice(modelInfo.cacheReadsPrice || 0)}/million tokens
+				<span style={{ fontWeight: 500 }}>Cache reads price:</span> {formatPrice(modelInfo.cacheReadsPrice || 0)}/million
+				tokens
 			</span>
 		),
 		modelInfo.outputPrice !== undefined && modelInfo.outputPrice > 0 && (
 			<span key="outputPrice">
-				<span style={{ fontWeight: 500 }}>Output price:</span> {formatPrice(modelInfo.outputPrice)}/million
-				tokens
+				<span style={{ fontWeight: 500 }}>Output price:</span> {formatPrice(modelInfo.outputPrice)}/million tokens
 			</span>
 		),
 		isGemini && (
 			<span key="geminiInfo" style={{ fontStyle: "italic" }}>
-				* Free up to {selectedModelId && selectedModelId.includes("flash") ? "15" : "2"} requests per minute.
-				After that, billing depends on prompt size.{" "}
+				* Free up to {selectedModelId && selectedModelId.includes("flash") ? "15" : "2"} requests per minute. After that,
+				billing depends on prompt size.{" "}
 				<VSCodeLink href="https://ai.google.dev/pricing" style={{ display: "inline", fontSize: "inherit" }}>
 					For more info, see pricing details.
 				</VSCodeLink>

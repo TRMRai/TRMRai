@@ -75,10 +75,7 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 					.filter((item) => item.ts && item.task)
 					.slice(0, 3)
 					.map((item) => (
-						<div
-							key={item.id}
-							className="history-preview-item"
-							onClick={() => handleHistorySelect(item.id)}>
+						<div key={item.id} className="history-preview-item" onClick={() => handleHistorySelect(item.id)}>
 							<div style={{ padding: "12px" }}>
 								<div style={{ marginBottom: "8px" }}>
 									<span
@@ -108,8 +105,7 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 								</div>
 								<div style={{ fontSize: "0.85em", color: "var(--vscode-descriptionForeground)" }}>
 									<span>
-										Tokens: ↑{formatLargeNumber(item.tokensIn || 0)} ↓
-										{formatLargeNumber(item.tokensOut || 0)}
+										Tokens: ↑{formatLargeNumber(item.tokensIn || 0)} ↓{formatLargeNumber(item.tokensOut || 0)}
 									</span>
 									{!!item.cacheWrites && (
 										<>

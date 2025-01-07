@@ -240,13 +240,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// then convert it to a uri we can use in the webview.
 
 		// The CSS file from the React build output
-		const stylesUri = getUri(webview, this.context.extensionUri, [
-			"webview-ui",
-			"build",
-			"static",
-			"css",
-			"main.css",
-		])
+		const stylesUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "static", "css", "main.css"])
 		// The JS file from the React build output
 		const scriptUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "static", "js", "main.js"])
 
@@ -318,9 +312,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "webviewDidLaunch":
 						this.postStateToWebview()
 						this.workspaceTracker?.initializeFilePaths() // don't await
-						getTheme().then((theme) =>
-							this.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }),
-						)
+						getTheme().then((theme) => this.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }))
 						// post last cached models in case the call to endpoint fails
 						this.readOpenRouterModels().then((openRouterModels) => {
 							if (openRouterModels) {
@@ -621,10 +613,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async readOpenRouterModels(): Promise<Record<string, ModelInfo> | undefined> {
-		const openRouterModelsFilePath = path.join(
-			await this.ensureCacheDirectoryExists(),
-			GlobalFileNames.openRouterModels,
-		)
+		const openRouterModelsFilePath = path.join(await this.ensureCacheDirectoryExists(), GlobalFileNames.openRouterModels)
 		const fileExists = await fileExistsAtPath(openRouterModelsFilePath)
 		if (fileExists) {
 			const fileContents = await fs.readFile(openRouterModelsFilePath, "utf8")
@@ -634,10 +623,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async refreshOpenRouterModels() {
-		const openRouterModelsFilePath = path.join(
-			await this.ensureCacheDirectoryExists(),
-			GlobalFileNames.openRouterModels,
-		)
+		const openRouterModelsFilePath = path.join(await this.ensureCacheDirectoryExists(), GlobalFileNames.openRouterModels)
 
 		let models: Record<string, ModelInfo> = {}
 		try {

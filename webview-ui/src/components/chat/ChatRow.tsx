@@ -2,12 +2,7 @@ import { VSCodeBadge, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/reac
 import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef } from "react"
 import { useSize } from "react-use"
-import {
-	ClineApiReqInfo,
-	ClineAskUseMcpServer,
-	ClineMessage,
-	ClineSayTool,
-} from "../../../../src/shared/ExtensionMessage"
+import { ClineApiReqInfo, ClineAskUseMcpServer, ClineMessage, ClineSayTool } from "../../../../src/shared/ExtensionMessage"
 import { COMMAND_OUTPUT_STRING, COMMAND_REQ_APP_STRING } from "../../../../src/shared/combineCommandSequences"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { findMatchingResourceOrTemplate } from "../../utils/mcp"
@@ -69,13 +64,7 @@ const ChatRow = memo(
 
 export default ChatRow
 
-export const ChatRowContent = ({
-	message,
-	isExpanded,
-	onToggleExpand,
-	lastModifiedMessage,
-	isLast,
-}: ChatRowContentProps) => {
+export const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessage, isLast }: ChatRowContentProps) => {
 	const { mcpServers } = useExtensionState()
 	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
 		if (message.text != null && message.say === "api_req_started") {
@@ -107,23 +96,17 @@ export const ChatRowContent = ({
 		switch (type) {
 			case "error":
 				return [
-					<span
-						className="codicon codicon-error"
-						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
+					<span className="codicon codicon-error" style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
 					<span style={{ color: errorColor, fontWeight: "bold" }}>Error</span>,
 				]
 			case "mistake_limit_reached":
 				return [
-					<span
-						className="codicon codicon-error"
-						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
+					<span className="codicon codicon-error" style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
 					<span style={{ color: errorColor, fontWeight: "bold" }}>Cline is having trouble...</span>,
 				]
 			case "auto_approval_max_req_reached":
 				return [
-					<span
-						className="codicon codicon-warning"
-						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
+					<span className="codicon codicon-warning" style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
 					<span style={{ color: errorColor, fontWeight: "bold" }}>Maximum Requests Reached</span>,
 				]
 			case "command":
@@ -131,14 +114,10 @@ export const ChatRowContent = ({
 					isCommandExecuting ? (
 						<ProgressIndicator />
 					) : (
-						<span
-							className="codicon codicon-terminal"
-							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
+						<span className="codicon codicon-terminal" style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
 					),
 					<span style={{ color: normalColor, fontWeight: "bold" }}>
-						{message.type === "ask"
-							? "Cline wants to execute this command:"
-							: "Cline executed this command:"}
+						{message.type === "ask" ? "Cline wants to execute this command:" : "Cline executed this command:"}
 					</span>,
 				]
 			case "use_mcp_server":
@@ -147,30 +126,25 @@ export const ChatRowContent = ({
 					isMcpServerResponding ? (
 						<ProgressIndicator />
 					) : (
-						<span
-							className="codicon codicon-server"
-							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
+						<span className="codicon codicon-server" style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
 					),
 					<span style={{ color: normalColor, fontWeight: "bold" }}>
 						{message.type === "ask" ? (
 							<>
-								Cline wants to{" "}
-								{mcpServerUse.type === "use_mcp_tool" ? "use a tool" : "access a resource"} on the{" "}
+								Cline wants to {mcpServerUse.type === "use_mcp_tool" ? "use a tool" : "access a resource"} on the{" "}
 								<code>{mcpServerUse.serverName}</code> MCP server:
 							</>
 						) : (
 							<>
-								Cline {mcpServerUse.type === "use_mcp_tool" ? "used a tool" : "accessed a resource"} on
-								the <code>{mcpServerUse.serverName}</code> MCP server:
+								Cline {mcpServerUse.type === "use_mcp_tool" ? "used a tool" : "accessed a resource"} on the{" "}
+								<code>{mcpServerUse.serverName}</code> MCP server:
 							</>
 						)}
 					</span>,
 				]
 			case "completion_result":
 				return [
-					<span
-						className="codicon codicon-check"
-						style={{ color: successColor, marginBottom: "-1.5px" }}></span>,
+					<span className="codicon codicon-check" style={{ color: successColor, marginBottom: "-1.5px" }}></span>,
 					<span style={{ color: successColor, fontWeight: "bold" }}>Task Completed</span>,
 				]
 			case "api_req_started":
@@ -222,9 +196,7 @@ export const ChatRowContent = ({
 				]
 			case "followup":
 				return [
-					<span
-						className="codicon codicon-question"
-						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
+					<span className="codicon codicon-question" style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
 					<span style={{ color: normalColor, fontWeight: "bold" }}>Cline has a question:</span>,
 				]
 			default:
@@ -276,9 +248,7 @@ export const ChatRowContent = ({
 						<div style={headerStyle}>
 							{toolIcon("edit")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? "Cline wants to edit this file:"
-									: "Cline is editing this file:"}
+								{message.type === "ask" ? "Cline wants to edit this file:" : "Cline is editing this file:"}
 							</span>
 						</div>
 						<CodeAccordian
@@ -296,9 +266,7 @@ export const ChatRowContent = ({
 						<div style={headerStyle}>
 							{toolIcon("new-file")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? "Cline wants to create a new file:"
-									: "Cline is creating a new file:"}
+								{message.type === "ask" ? "Cline wants to create a new file:" : "Cline is creating a new file:"}
 							</span>
 						</div>
 						<CodeAccordian
@@ -616,8 +584,7 @@ export const ChatRowContent = ({
 								tool={{
 									name: useMcpServer.toolName || "",
 									description:
-										server?.tools?.find((tool) => tool.name === useMcpServer.toolName)
-											?.description || "",
+										server?.tools?.find((tool) => tool.name === useMcpServer.toolName)?.description || "",
 								}}
 							/>
 							{useMcpServer.arguments && useMcpServer.arguments !== "{}" && (
@@ -656,9 +623,7 @@ export const ChatRowContent = ({
 								style={{
 									...headerStyle,
 									marginBottom:
-										(cost == null && apiRequestFailedMessage) || apiReqStreamingFailedMessage
-											? 10
-											: 0,
+										(cost == null && apiRequestFailedMessage) || apiReqStreamingFailedMessage ? 10 : 0,
 									justifyContent: "space-between",
 									cursor: "pointer",
 									userSelect: "none",
@@ -819,8 +784,8 @@ export const ChatRowContent = ({
 									<span style={{ fontWeight: 500, color: "#FFA500" }}>Diff Edit Failed</span>
 								</div>
 								<div>
-									This usually happens when the model uses search patterns that don't match anything
-									in the file. Retrying...
+									This usually happens when the model uses search patterns that don't match anything in the
+									file. Retrying...
 								</div>
 							</div>
 						</>
@@ -857,15 +822,13 @@ export const ChatRowContent = ({
 											fontSize: 18,
 											color: "#FFA500",
 										}}></i>
-									<span style={{ fontWeight: 500, color: "#FFA500" }}>
-										Shell Integration Unavailable
-									</span>
+									<span style={{ fontWeight: 500, color: "#FFA500" }}>Shell Integration Unavailable</span>
 								</div>
 								<div>
 									Cline won't be able to view the command's output. Please update VSCode (
-									<code>CMD/CTRL + Shift + P</code> → "Update") and make sure you're using a supported
-									shell: zsh, bash, fish, or PowerShell (<code>CMD/CTRL + Shift + P</code> →
-									"Terminal: Select Default Profile").{" "}
+									<code>CMD/CTRL + Shift + P</code> → "Update") and make sure you're using a supported shell:
+									zsh, bash, fish, or PowerShell (<code>CMD/CTRL + Shift + P</code> → "Terminal: Select Default
+									Profile").{" "}
 									<a
 										href="https://github.com/cline/cline/wiki/Troubleshooting-%E2%80%90-Shell-Integration-Unavailable"
 										style={{ color: "inherit", textDecoration: "underline" }}>

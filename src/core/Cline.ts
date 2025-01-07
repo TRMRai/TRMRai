@@ -54,8 +54,7 @@ import { removeInvalidChars } from "../utils/string"
 import { fixModelHtmlEscaping } from "../utils/string"
 import { OpenAiHandler } from "../api/providers/openai"
 
-const cwd =
-	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
+const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
 
 type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<
@@ -200,10 +199,7 @@ export class Cline {
 			const taskMessage = this.clineMessages[0] // first message is always the task say
 			const lastRelevantMessage =
 				this.clineMessages[
-					findLastIndex(
-						this.clineMessages,
-						(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
-					)
+					findLastIndex(this.clineMessages, (m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"))
 				]
 			await this.providerRef.deref()?.updateTaskHistory({
 				id: this.taskId,
@@ -245,9 +241,7 @@ export class Cline {
 					// todo be more efficient about saving and posting only new data or one whole message at a time so ignore partial for saves, and only post parts of partial message instead of whole array in new listener
 					// await this.saveClineMessages()
 					// await this.providerRef.deref()?.postStateToWebview()
-					await this.providerRef
-						.deref()
-						?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage })
+					await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage })
 					throw new Error("Current ask promise was ignored 1")
 				} else {
 					// this is a new partial message, so add it with partial state
@@ -281,9 +275,7 @@ export class Cline {
 					lastMessage.partial = false
 					await this.saveClineMessages()
 					// await this.providerRef.deref()?.postStateToWebview()
-					await this.providerRef
-						.deref()
-						?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage })
+					await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage })
 				} else {
 					// this is a new partial=false message, so add it like normal
 					this.askResponse = undefined
@@ -339,9 +331,7 @@ export class Cline {
 					lastMessage.text = text
 					lastMessage.images = images
 					lastMessage.partial = partial
-					await this.providerRef
-						.deref()
-						?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage })
+					await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage })
 				} else {
 					// this is a new partial message, so add it with partial state
 					const sayTs = Date.now()
@@ -362,9 +352,7 @@ export class Cline {
 					// instead of streaming partialMessage events, we do a save and post like normal to persist to disk
 					await this.saveClineMessages()
 					// await this.providerRef.deref()?.postStateToWebview()
-					await this.providerRef
-						.deref()
-						?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage }) // more performant than an entire postStateToWebview
+					await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage }) // more performant than an entire postStateToWebview
 				} else {
 					// this is a new partial=false message, so add it like normal
 					const sayTs = Date.now()
@@ -394,11 +382,7 @@ export class Cline {
 
 	async removeLastPartialMessageIfExistsWithType(type: "ask" | "say", askOrSay: ClineAsk | ClineSay) {
 		const lastMessage = this.clineMessages.at(-1)
-		if (
-			lastMessage?.partial &&
-			lastMessage.type === type &&
-			(lastMessage.ask === askOrSay || lastMessage.say === askOrSay)
-		) {
+		if (lastMessage?.partial && lastMessage.type === type && (lastMessage.ask === askOrSay || lastMessage.say === askOrSay)) {
 			this.clineMessages.pop()
 			await this.saveClineMessages()
 			await this.providerRef.deref()?.postStateToWebview()
@@ -489,8 +473,7 @@ export class Cline {
 
 		// need to make sure that the api conversation history can be resumed by the api, even if it goes out of sync with cline messages
 
-		let existingApiConversationHistory: Anthropic.Messages.MessageParam[] =
-			await this.getSavedApiConversationHistory()
+		let existingApiConversationHistory: Anthropic.Messages.MessageParam[] = await this.getSavedApiConversationHistory()
 
 		// v2.0 xml tags refactor caveat: since we don't use tools anymore, we need to replace all tool use blocks with a text block since the API disallows conversations with tool uses and no tool schema
 		const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
@@ -581,9 +564,7 @@ export class Cline {
 						) as Anthropic.ToolResultBlockParam[]
 
 						const missingToolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks
-							.filter(
-								(toolUse) => !existingToolResults.some((result) => result.tool_use_id === toolUse.id),
-							)
+							.filter((toolUse) => !existingToolResults.some((result) => result.tool_use_id === toolUse.id))
 							.map((toolUse) => ({
 								type: "tool_result",
 								tool_use_id: toolUse.id,
@@ -828,9 +809,7 @@ export class Cline {
 		if (previousApiReqIndex >= 0) {
 			const previousRequest = this.clineMessages[previousApiReqIndex]
 			if (previousRequest && previousRequest.text) {
-				const { tokensIn, tokensOut, cacheWrites, cacheReads }: ClineApiReqInfo = JSON.parse(
-					previousRequest.text,
-				)
+				const { tokensIn, tokensOut, cacheWrites, cacheReads }: ClineApiReqInfo = JSON.parse(previousRequest.text)
 				const totalTokens = (tokensIn || 0) + (tokensOut || 0) + (cacheWrites || 0) + (cacheReads || 0)
 				let contextWindow = this.api.getModel().info.contextWindow || 128_000
 				// FIXME: hack to get anyone using openai compatible with deepseek to have the proper context window instead of the default 128k. We need a way for the user to specify the context window for models they input through openai compatible
@@ -868,10 +847,7 @@ export class Cline {
 			yield firstChunk.value
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
-			const { response } = await this.ask(
-				"api_req_failed",
-				error.message ?? JSON.stringify(serializeError(error), null, 2),
-			)
+			const { response } = await this.ask("api_req_failed", error.message ?? JSON.stringify(serializeError(error), null, 2))
 			if (response !== "yesButtonClicked") {
 				// this will never happen since if noButtonClicked, we will clear current task, aborting this instance
 				throw new Error("API request failed")
@@ -1049,9 +1025,7 @@ export class Cline {
 					if (response !== "yesButtonClicked") {
 						if (response === "messageResponse") {
 							await this.say("user_feedback", text, images)
-							pushToolResult(
-								formatResponse.toolResult(formatResponse.toolDeniedWithFeedback(text), images),
-							)
+							pushToolResult(formatResponse.toolResult(formatResponse.toolDeniedWithFeedback(text), images))
 							// this.userMessageContent.push({
 							// 	type: "text",
 							// 	text: `${toolDescription()}`,
@@ -1503,9 +1477,7 @@ export class Cline {
 							} else {
 								if (!relDirPath) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("list_code_definition_names", "path"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("list_code_definition_names", "path"))
 									break
 								}
 								this.consecutiveMistakeCount = 0
@@ -1654,9 +1626,7 @@ export class Cline {
 								if (action === "launch") {
 									if (!url) {
 										this.consecutiveMistakeCount++
-										pushToolResult(
-											await this.sayAndCreateMissingParamError("browser_action", "url"),
-										)
+										pushToolResult(await this.sayAndCreateMissingParamError("browser_action", "url"))
 										await this.browserSession.closeBrowser()
 										break
 									}
@@ -1688,10 +1658,7 @@ export class Cline {
 										if (!coordinate) {
 											this.consecutiveMistakeCount++
 											pushToolResult(
-												await this.sayAndCreateMissingParamError(
-													"browser_action",
-													"coordinate",
-												),
+												await this.sayAndCreateMissingParamError("browser_action", "coordinate"),
 											)
 											await this.browserSession.closeBrowser()
 											break // can't be within an inner switch
@@ -1700,9 +1667,7 @@ export class Cline {
 									if (action === "type") {
 										if (!text) {
 											this.consecutiveMistakeCount++
-											pushToolResult(
-												await this.sayAndCreateMissingParamError("browser_action", "text"),
-											)
+											pushToolResult(await this.sayAndCreateMissingParamError("browser_action", "text"))
 											await this.browserSession.closeBrowser()
 											break
 										}
@@ -1786,28 +1751,19 @@ export class Cline {
 									// ).catch(() => {})
 								} else {
 									// don't need to remove last partial since we couldn't have streamed a say
-									await this.ask(
-										"command",
-										removeClosingTag("command", command),
-										block.partial,
-									).catch(() => {})
+									await this.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
 								}
 								break
 							} else {
 								if (!command) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("execute_command", "command"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("execute_command", "command"))
 									break
 								}
 								if (!requiresApprovalRaw) {
 									this.consecutiveMistakeCount++
 									pushToolResult(
-										await this.sayAndCreateMissingParamError(
-											"execute_command",
-											"requires_approval",
-										),
+										await this.sayAndCreateMissingParamError("execute_command", "requires_approval"),
 									)
 									break
 								}
@@ -1887,16 +1843,12 @@ export class Cline {
 							} else {
 								if (!server_name) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("use_mcp_tool", "server_name"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("use_mcp_tool", "server_name"))
 									break
 								}
 								if (!tool_name) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("use_mcp_tool", "tool_name"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("use_mcp_tool", "tool_name"))
 									break
 								}
 								// arguments are optional, but if they are provided they must be valid JSON
@@ -2000,16 +1952,12 @@ export class Cline {
 							} else {
 								if (!server_name) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("access_mcp_resource", "server_name"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("access_mcp_resource", "server_name"))
 									break
 								}
 								if (!uri) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("access_mcp_resource", "uri"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("access_mcp_resource", "uri"))
 									break
 								}
 								this.consecutiveMistakeCount = 0
@@ -2036,9 +1984,7 @@ export class Cline {
 
 								// now execute the tool
 								await this.say("mcp_server_request_started")
-								const resourceResult = await this.providerRef
-									.deref()
-									?.mcpHub?.readResource(server_name, uri)
+								const resourceResult = await this.providerRef.deref()?.mcpHub?.readResource(server_name, uri)
 								const resourceResultPretty =
 									resourceResult?.contents
 										.map((item) => {
@@ -2062,24 +2008,17 @@ export class Cline {
 						const question: string | undefined = block.params.question
 						try {
 							if (block.partial) {
-								await this.ask("followup", removeClosingTag("question", question), block.partial).catch(
-									() => {},
-								)
+								await this.ask("followup", removeClosingTag("question", question), block.partial).catch(() => {})
 								break
 							} else {
 								if (!question) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("ask_followup_question", "question"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("ask_followup_question", "question"))
 									break
 								}
 								this.consecutiveMistakeCount = 0
 
-								if (
-									this.autoApprovalSettings.enabled &&
-									this.autoApprovalSettings.enableNotifications
-								) {
+								if (this.autoApprovalSettings.enabled && this.autoApprovalSettings.enableNotifications) {
 									showSystemNotification({
 										subtitle: "Cline has a question...",
 										message: question.replace(/\n/g, " "),
@@ -2130,25 +2069,16 @@ export class Cline {
 									// NOTE: we do not want to auto approve a command run as part of the attempt_completion tool
 									if (lastMessage && lastMessage.ask === "command") {
 										// update command
-										await this.ask(
-											"command",
-											removeClosingTag("command", command),
-											block.partial,
-										).catch(() => {})
+										await this.ask("command", removeClosingTag("command", command), block.partial).catch(
+											() => {},
+										)
 									} else {
 										// last message is completion_result
 										// we have command string, which means we have the result as well, so finish it (doesnt have to exist yet)
-										await this.say(
-											"completion_result",
-											removeClosingTag("result", result),
-											undefined,
-											false,
+										await this.say("completion_result", removeClosingTag("result", result), undefined, false)
+										await this.ask("command", removeClosingTag("command", command), block.partial).catch(
+											() => {},
 										)
-										await this.ask(
-											"command",
-											removeClosingTag("command", command),
-											block.partial,
-										).catch(() => {})
 									}
 								} else {
 									// no command, still outputting partial result
@@ -2163,17 +2093,12 @@ export class Cline {
 							} else {
 								if (!result) {
 									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("attempt_completion", "result"),
-									)
+									pushToolResult(await this.sayAndCreateMissingParamError("attempt_completion", "result"))
 									break
 								}
 								this.consecutiveMistakeCount = 0
 
-								if (
-									this.autoApprovalSettings.enabled &&
-									this.autoApprovalSettings.enableNotifications
-								) {
+								if (this.autoApprovalSettings.enabled && this.autoApprovalSettings.enableNotifications) {
 									showSystemNotification({
 										subtitle: "Task Completed",
 										message: result.replace(/\n/g, " "),
@@ -2273,10 +2198,7 @@ export class Cline {
 		}
 	}
 
-	async recursivelyMakeClineRequests(
-		userContent: UserContent,
-		includeFileDetails: boolean = false,
-	): Promise<boolean> {
+	async recursivelyMakeClineRequests(userContent: UserContent, includeFileDetails: boolean = false): Promise<boolean> {
 		if (this.abort) {
 			throw new Error("Cline instance aborted")
 		}
@@ -2334,8 +2256,7 @@ export class Cline {
 		await this.say(
 			"api_req_started",
 			JSON.stringify({
-				request:
-					userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n") + "\n\nLoading...",
+				request: userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n") + "\n\nLoading...",
 			}),
 		)
 
@@ -2373,13 +2294,7 @@ export class Cline {
 					cacheReads: cacheReadTokens,
 					cost:
 						totalCost ??
-						calculateApiCost(
-							this.api.getModel().info,
-							inputTokens,
-							outputTokens,
-							cacheWriteTokens,
-							cacheReadTokens,
-						),
+						calculateApiCost(this.api.getModel().info, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens),
 					cancelReason,
 					streamingFailedMessage,
 				} satisfies ClineApiReqInfo)
@@ -2490,10 +2405,7 @@ export class Cline {
 				// abandoned happens when extension is no longer waiting for the cline instance to finish aborting (error is thrown here when any function in the for loop throws due to this.abort)
 				if (!this.abandoned) {
 					this.abortTask() // if the stream failed, there's various states the task could be in (i.e. could have streamed some tools the user may have executed), so we just resort to replicating a cancel task
-					await abortStream(
-						"streaming_failed",
-						error.message ?? JSON.stringify(serializeError(error), null, 2),
-					)
+					await abortStream("streaming_failed", error.message ?? JSON.stringify(serializeError(error), null, 2))
 					const history = await this.providerRef.deref()?.getTaskWithId(this.taskId)
 					if (history) {
 						await this.providerRef.deref()?.initClineWithHistoryItem(history.historyItem)

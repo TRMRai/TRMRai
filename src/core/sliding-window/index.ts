@@ -8,9 +8,7 @@ a 200k context, we can assume that the first half is likely irrelevant to their 
 Therefore, this function should only be called when absolutely necessary to fit within
 context limits, not as a continuous process.
 */
-export function truncateHalfConversation(
-	messages: Anthropic.Messages.MessageParam[],
-): Anthropic.Messages.MessageParam[] {
+export function truncateHalfConversation(messages: Anthropic.Messages.MessageParam[]): Anthropic.Messages.MessageParam[] {
 	// API expects messages to be in user-assistant order, and tool use messages must be followed by tool results. We need to maintain this structure while truncating.
 
 	// Always keep the first Task message (this includes the project's file structure in environment_details)

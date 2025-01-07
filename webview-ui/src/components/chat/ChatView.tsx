@@ -231,8 +231,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	const isStreaming = useMemo(() => {
 		const isLastAsk = !!modifiedMessages.at(-1)?.ask // checking clineAsk isn't enough since messages effect may be called again for a tool for example, set clineAsk to its value, and if the next message is not an ask then it doesn't reset. This is likely due to how much more often we're updating messages as compared to before, and should be resolved with optimizations as it's likely a rendering bug. but as a final guard for now, the cancel button will show if the last message is not an ask
-		const isToolCurrentlyAsking =
-			isLastAsk && clineAsk !== undefined && enableButtons && primaryButtonText !== undefined
+		const isToolCurrentlyAsking = isLastAsk && clineAsk !== undefined && enableButtons && primaryButtonText !== undefined
 		if (isToolCurrentlyAsking) {
 			return false
 		}
@@ -389,9 +388,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "selectedImages":
 					const newImages = message.images ?? []
 					if (newImages.length > 0) {
-						setSelectedImages((prevImages) =>
-							[...prevImages, ...newImages].slice(0, MAX_IMAGES_PER_MESSAGE),
-						)
+						setSelectedImages((prevImages) => [...prevImages, ...newImages].slice(0, MAX_IMAGES_PER_MESSAGE))
 					}
 					break
 				case "invoke":
@@ -409,14 +406,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			}
 			// textAreaRef.current is not explicitly required here since react gaurantees that ref will be stable across re-renders, and we're not using its value but its reference.
 		},
-		[
-			isHidden,
-			textAreaDisabled,
-			enableButtons,
-			handleSendMessage,
-			handlePrimaryButtonClick,
-			handleSecondaryButtonClick,
-		],
+		[isHidden, textAreaDisabled, enableButtons, handleSendMessage, handlePrimaryButtonClick, handleSecondaryButtonClick],
 	)
 
 	useEvent("message", handleMessage)
@@ -474,13 +464,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			return ["browser_action_launch"].includes(message.ask!)
 		}
 		if (message.type === "say") {
-			return [
-				"browser_action_launch",
-				"api_req_started",
-				"text",
-				"browser_action",
-				"browser_action_result",
-			].includes(message.say!)
+			return ["browser_action_launch", "api_req_started", "text", "browser_action", "browser_action_result"].includes(
+				message.say!,
+			)
 		}
 		return false
 	}
@@ -750,10 +736,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								style={{ display: "inline" }}>
 								Claude 3.5 Sonnet's agentic coding capabilities,
 							</VSCodeLink>{" "}
-							I can handle complex software development tasks step-by-step. With tools that let me create
-							& edit files, explore complex projects, use the browser, and execute terminal commands
-							(after you grant permission), I can assist you in ways that go beyond code completion or
-							tech support. I can even use MCP to create new tools and extend my own capabilities.
+							I can handle complex software development tasks step-by-step. With tools that let me create & edit
+							files, explore complex projects, use the browser, and execute terminal commands (after you grant
+							permission), I can assist you in ways that go beyond code completion or tech support. I can even use
+							MCP to create new tools and extend my own capabilities.
 						</p>
 					</div>
 					{taskHistory.length > 0 && <HistoryPreview showHistoryView={showHistoryView} />}

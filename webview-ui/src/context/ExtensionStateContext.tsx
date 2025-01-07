@@ -2,12 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { useEvent } from "react-use"
 import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "../../../src/shared/AutoApprovalSettings"
 import { ExtensionMessage, ExtensionState } from "../../../src/shared/ExtensionMessage"
-import {
-	ApiConfiguration,
-	ModelInfo,
-	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
-} from "../../../src/shared/api"
+import { ApiConfiguration, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../../src/shared/api"
 import { findLastIndex } from "../../../src/shared/array"
 import { McpServer } from "../../../src/shared/mcp"
 import { convertTextMateToHljs } from "../utils/textMateToHljs"

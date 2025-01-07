@@ -180,10 +180,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 							<VSCodeRadio value="oldest">Oldest</VSCodeRadio>
 							<VSCodeRadio value="mostExpensive">Most Expensive</VSCodeRadio>
 							<VSCodeRadio value="mostTokens">Most Tokens</VSCodeRadio>
-							<VSCodeRadio
-								value="mostRelevant"
-								disabled={!searchQuery}
-								style={{ opacity: searchQuery ? 1 : 0.5 }}>
+							<VSCodeRadio value="mostRelevant" disabled={!searchQuery} style={{ opacity: searchQuery ? 1 : 0.5 }}>
 								Most Relevant
 							</VSCodeRadio>
 						</VSCodeRadioGroup>
@@ -219,9 +216,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 								style={{
 									cursor: "pointer",
 									borderBottom:
-										index < taskHistory.length - 1
-											? "1px solid var(--vscode-panel-border)"
-											: "none",
+										index < taskHistory.length - 1 ? "1px solid var(--vscode-panel-border)" : "none",
 								}}
 								onClick={() => handleHistorySelect(item.id)}>
 								<div
@@ -428,10 +423,7 @@ const ExportButton = ({ itemId }: { itemId: string }) => (
 )
 
 // https://gist.github.com/evenfrost/1ba123656ded32fb7a0cd4651efd4db0
-export const highlight = (
-	fuseSearchResult: FuseResult<any>[],
-	highlightClassName: string = "history-item-highlight",
-) => {
+export const highlight = (fuseSearchResult: FuseResult<any>[], highlightClassName: string = "history-item-highlight") => {
 	const set = (obj: Record<string, any>, path: string, value: any) => {
 		const pathValue = path.split(".")
 		let i: number

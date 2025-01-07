@@ -1,10 +1,6 @@
 import { mentionRegex } from "../../../src/shared/context-mentions"
 
-export function insertMention(
-	text: string,
-	position: number,
-	value: string,
-): { newValue: string; mentionIndex: number } {
+export function insertMention(text: string, position: number, value: string): { newValue: string; mentionIndex: number } {
 	const beforeCursor = text.slice(0, position)
 	const afterCursor = text.slice(position)
 

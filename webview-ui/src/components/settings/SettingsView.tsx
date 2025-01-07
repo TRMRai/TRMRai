@@ -12,8 +12,7 @@ type SettingsViewProps = {
 }
 
 const SettingsView = ({ onDone }: SettingsViewProps) => {
-	const { apiConfiguration, version, customInstructions, setCustomInstructions, openRouterModels } =
-		useExtensionState()
+	const { apiConfiguration, version, customInstructions, setCustomInstructions, openRouterModels } = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 	const handleSubmit = () => {
@@ -74,8 +73,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				<h3 style={{ color: "var(--vscode-foreground)", margin: 0 }}>Settings</h3>
 				<VSCodeButton onClick={handleSubmit}>Done</VSCodeButton>
 			</div>
-			<div
-				style={{ flexGrow: 1, overflowY: "scroll", paddingRight: 8, display: "flex", flexDirection: "column" }}>
+			<div style={{ flexGrow: 1, overflowY: "scroll", paddingRight: 8, display: "flex", flexDirection: "column" }}>
 				<div style={{ marginBottom: 5 }}>
 					<ApiOptions
 						showModelOptions={true}
@@ -89,9 +87,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						value={customInstructions ?? ""}
 						style={{ width: "100%" }}
 						rows={4}
-						placeholder={
-							'e.g. "Run unit tests at the end", "Use TypeScript with async/await", "Speak in Spanish"'
-						}
+						placeholder={'e.g. "Run unit tests at the end", "Use TypeScript with async/await", "Speak in Spanish"'}
 						onInput={(e: any) => setCustomInstructions(e.target?.value ?? "")}>
 						<span style={{ fontWeight: "500" }}>Custom Instructions</span>
 					</VSCodeTextArea>
