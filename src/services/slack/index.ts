@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 
 let isSlackEnabled = false
 let webhookUrl = ''
+let messageCount = 0
 
 /**
  * Set slack notification configuration
@@ -9,6 +10,9 @@ let webhookUrl = ''
  */
 export const setSlackEnabled = (enabled: boolean): void => {
   isSlackEnabled = enabled
+  if (!enabled) {
+    messageCount = 0
+  }
 }
 
 /**
@@ -17,6 +21,14 @@ export const setSlackEnabled = (enabled: boolean): void => {
  */
 export const setWebhookUrl = (url: string): void => {
   webhookUrl = url
+}
+
+/**
+ * Reset the message counter
+ * This is useful for starting a new sequence
+ */
+export const resetThread = (): void => {
+  messageCount = 0
 }
 
 /**
@@ -34,12 +46,16 @@ export const sendSlackMessage = async (text: string): Promise<void> => {
       return
     }
 
+    // For subsequent messages, add a visual indicator that it's part of a sequence
+    const formattedText = messageCount > 0 ? `↪️ ${text}` : text
+    messageCount++
+
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text: formattedText })
     })
 
     if (!response.ok) {

@@ -1,19 +1,70 @@
-import { setSlackEnabled, setWebhookUrl, sendSlackMessage, notifyTaskComplete, notifyUserInputNeeded, notifyTaskFailed, notifyCommandExecution } from '../services/slack'
+import { setSlackEnabled, setWebhookUrl, sendSlackMessage, notifyTaskComplete, notifyUserInputNeeded, notifyTaskFailed, notifyCommandExecution, resetThread } from '../services/slack'
 
 describe('Slack Notifications', () => {
     let mockFetch: jest.Mock
 
     beforeEach(() => {
-        mockFetch = jest.fn()
+        mockFetch = jest.fn().mockImplementation(() => 
+            Promise.resolve({
+                ok: true,
+                text: () => Promise.resolve('ok')
+            })
+        )
         global.fetch = mockFetch
         setWebhookUrl('https://hooks.slack.com/services/test')
         setSlackEnabled(true)
+        resetThread()
     })
 
     afterEach(() => {
         jest.resetAllMocks()
         setSlackEnabled(false)
         setWebhookUrl('')
+        resetThread()
+    })
+
+    it('should send first message without indicator', async () => {
+        await sendSlackMessage('First message')
+        expect(mockFetch).toHaveBeenCalledWith(
+            'https://hooks.slack.com/services/test',
+            expect.objectContaining({
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: 'First message' })
+            })
+        )
+    })
+
+    it('should send subsequent messages with reply indicator', async () => {
+        // First message
+        await sendSlackMessage('First message')
+        
+        // Second message should have indicator
+        await sendSlackMessage('Second message')
+        expect(mockFetch).toHaveBeenLastCalledWith(
+            'https://hooks.slack.com/services/test',
+            expect.objectContaining({
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: '↪️ Second message' })
+            })
+        )
+    })
+
+    it('should reset message sequence when slack is disabled', async () => {
+        await sendSlackMessage('First message')
+        await sendSlackMessage('Second message')
+        setSlackEnabled(false)
+        setSlackEnabled(true)
+        await sendSlackMessage('New message')
+        expect(mockFetch).toHaveBeenLastCalledWith(
+            'https://hooks.slack.com/services/test',
+            expect.objectContaining({
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: 'New message' })
+            })
+        )
     })
 
     it('should send task completion notification', async () => {
@@ -85,6 +136,21 @@ describe('Slack Notifications', () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: '🔧 Command Requested: npm install' })
+            })
+        )
+    })
+
+    it('should start new sequence after resetThread is called', async () => {
+        await sendSlackMessage('First message')
+        await sendSlackMessage('Second message')
+        resetThread()
+        await sendSlackMessage('New first message')
+        expect(mockFetch).toHaveBeenLastCalledWith(
+            'https://hooks.slack.com/services/test',
+            expect.objectContaining({
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: 'New first message' })
             })
         )
     })
