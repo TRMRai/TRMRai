@@ -63,6 +63,7 @@ export interface WebviewMessage {
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
 		| "setApiConfigPassword"
+		| "mode"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
