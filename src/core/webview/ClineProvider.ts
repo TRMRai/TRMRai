@@ -92,7 +92,7 @@ type GlobalStateKey =
 	| "currentApiConfigName"
 	| "listApiConfigMeta"
 	| "slackConfig"
-	| "slackWebhookUrl"
+	| "slackWebhookUrl" 
 	| "slackNotificationsEnabled"
 	| "mode"
 	| "modeApiConfigs"
@@ -1654,6 +1654,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		requestDelaySeconds: number;
 		currentApiConfigName: string;
 		listApiConfigMeta: ApiConfigMeta[];
+		mode: Mode;
+		modeApiConfigs: Record<Mode, string>;
 	}> {
 		const [
 			storedApiProvider,
