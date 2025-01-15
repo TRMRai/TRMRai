@@ -86,6 +86,7 @@ export class Cline {
 	didFinishAborting = false
 	abandoned = false
 	private diffViewProvider: DiffViewProvider
+	private slackConfig?: { enabled: boolean; webhookUrl: string }
 
 	// streaming
 	private currentStreamingContentIndex = 0
@@ -152,6 +153,7 @@ export class Cline {
 				console.error('Failed to send initialization notification:', error);
 			});
 		}
+		this.slackConfig = slackConfig
 		this.diffViewProvider = new DiffViewProvider(cwd)
 		this.customInstructions = customInstructions
 		this.diffEnabled = enableDiff ?? false
@@ -2070,13 +2072,14 @@ export class Cline {
 									commandResult = execCommandResult
 								} else {
 									await this.say("completion_result", result, undefined, false)
+									if(this.slackConfig?.enabled && this.slackConfig?.webhookUrl) {
 									await (async () => {
 										try {
 											if (!result) {
 												console.warn("No result provided for completion notification", {
 													taskId: this.taskId,
 													timestamp: new Date().toISOString()
-												});
+												})
 											}
 											const completionMessage = result
 												? `✅ Task completed successfully!\n\nResult:\n${result}`
@@ -2088,10 +2091,11 @@ export class Cline {
 												errorMessage: error instanceof Error ? error.message : 'Unknown error',
 												errorStack: error instanceof Error ? error.stack : 'No stack trace',
 												taskId: this.taskId
-											});
+											})
 											vscode.window.showErrorMessage(`Failed to send Slack completion notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
 										}
-									})();
+									})()
+									}
 								}
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
 								const { response, text, images } = await this.ask("completion_result", "", false);
@@ -2261,6 +2265,7 @@ export class Cline {
 					// lastMessage.ts = Date.now() DO NOT update ts since it is used as a key for virtuoso list
 					lastMessage.partial = false
 					// instead of streaming partialMessage events, we do a save and post like normal to persist to disk
+					console.log("updating artial message", lastMessage)
 					// await this.saveClineMessages()
 				}
 
@@ -2327,6 +2332,7 @@ export class Cline {
 					}
 
 					if (this.abort) {
+						console.log("aborting stream...")
 						if (!this.abandoned) {
 							// only need to gracefully abort if this instance isn't abandoned (sometimes openrouter stream hangs, in which case this would affect future instances of cline)
 							await abortStream("user_cancelled")

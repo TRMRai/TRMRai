@@ -71,16 +71,12 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const [commandInput, setCommandInput] = useState("")
 
 	const handleSubmit = () => {
-		console.log('handleSubmit called');
-		console.log('Validating configuration...');
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
 		const modelIdValidationResult = validateModelId(apiConfiguration, glamaModels, openRouterModels)
 
-		console.log('Validation results:', { apiValidationResult, modelIdValidationResult });
 		setApiErrorMessage(apiValidationResult)
 		setModelIdErrorMessage(modelIdValidationResult)
 		if (!apiValidationResult && !modelIdValidationResult) {
-			console.log('Validation passed, sending messages...');
 			vscode.postMessage({
 				type: "apiConfiguration",
 				apiConfiguration
@@ -105,15 +101,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
-			// Send settings to extension
-			console.log('Sending settings to extension...');
-			console.log('Sound enabled:', soundEnabled);
-			console.log('Sound volume:', soundVolume);
-			console.log('Slack notifications enabled:', slackNotificationsEnabled);
-			console.log('Slack webhook URL:', slackWebhookUrl);
-			
-			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled });
-			vscode.postMessage({ type: "soundVolume", value: soundVolume });
 			vscode.postMessage({ type: "slackNotificationsEnabled", bool: slackNotificationsEnabled });
 			vscode.postMessage({ type: "slackWebhookUrl", text: slackWebhookUrl });
 			vscode.postMessage({

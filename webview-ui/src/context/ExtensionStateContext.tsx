@@ -183,25 +183,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				setListApiConfigMeta(message.listApiConfig ?? [])
 				break
 			}
-			case "soundEnabled": {
-				if (message.bool !== undefined) {
-					setState((prevState: ExtensionState) => ({ ...prevState, soundEnabled: message.bool }))
-				}
-				break
-			}
-			case "soundVolume": {
-				if (message.value !== undefined) {
-					setState((prevState: ExtensionState) => ({ ...prevState, soundVolume: message.value }))
-				}
-				break
-			}
-			case "slackWebhookUrl": {
-				if (message.text !== undefined) {
-					setState((prevState: ExtensionState) => ({ ...prevState, slackWebhookUrl: message.text }))
-					vscode.postMessage({ type: "slackWebhookUrl", text: message.text })
-				}
-				break
-			}
 		}
 	}, [setListApiConfigMeta])
 

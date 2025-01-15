@@ -1071,19 +1071,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async updateCustomInstructions(instructions?: string): Promise<void> {
-		try {
-			// User may be clearing the field
-			const normalizedInstructions = instructions || undefined;
-			await this.updateGlobalState("customInstructions", normalizedInstructions);
-			
-			if (this.cline) {
-				this.cline.customInstructions = normalizedInstructions;
-			}
-			
-			await this.postStateToWebview();
-		} catch (error) {
-			throw new Error(`Failed to update custom instructions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		await this.updateGlobalState("customInstructions", instructions || undefined)
+		if (this.cline) {
+			this.cline.customInstructions = instructions || undefined
 		}
+		await this.postStateToWebview()
 	}
 
 	// MCP
@@ -1430,11 +1422,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			if (fileExists) {
 				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
 				return {
-						historyItem,
-						taskDirPath,
-						apiConversationHistoryFilePath,
-						uiMessagesFilePath,
-						apiConversationHistory,
+					historyItem,
+					taskDirPath,
+					apiConversationHistoryFilePath,
+					uiMessagesFilePath,
+					apiConversationHistory,
 				}
 			}
 		}
@@ -1459,9 +1451,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async deleteTaskWithId(id: string) {
-			if (id === this.cline?.taskId) {
+		if (id === this.cline?.taskId) {
 			await this.clearTask()
-			}
+		}
 
 		const { taskDirPath, apiConversationHistoryFilePath, uiMessagesFilePath } = await this.getTaskWithId(id)
 
@@ -1525,6 +1517,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			listApiConfigMeta,
 			slackWebhookUrl,
 			slackNotificationsEnabled,
+			slackConfig,
 			mode,
 		} = await this.getState()
 
@@ -1564,10 +1557,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			slackWebhookUrl: slackWebhookUrl ?? "",
 			slackNotificationsEnabled: slackNotificationsEnabled ?? false,
-			slackConfig: {
-				enabled: slackNotificationsEnabled ?? false,
-				webhookUrl: slackWebhookUrl ?? ""
-			},
+			slackConfig: slackConfig ?? {},
 			mode: mode ?? codeMode,
 		}
 	}
