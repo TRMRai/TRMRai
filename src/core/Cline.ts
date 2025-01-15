@@ -207,7 +207,7 @@ export class Cline {
 			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
 		} catch (error) {
 			// in the off chance this fails, we don't want to stop the task
-			console.error("Failed to save api conversation history", error)
+			console.error("Failed to save API conversation history:", error)
 		}
 	}
 
