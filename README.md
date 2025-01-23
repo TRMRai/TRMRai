@@ -40,7 +40,7 @@ Hot off the heels of **v3.0** introducing Code, Architect, and Ask chat modes, o
 
 You can now tailor the **role definition** and **custom instructions** for every chat mode to perfectly fit your workflow. Want to adjust Architect mode to focus more on system scalability? Or tweak Ask mode for deeper research queries? Done. Plus, you can define these via **mode-specific `.clinerules-[mode]` files**. You’ll find all of this in the new **Prompts** tab in the top menu.
 
-The second big feature in this release is a complete revamp of **prompt enhancements**. This feature helps you craft messages to get even better results from Cline. Here’s what’s new:
+The second big feature in this release is a complete revamp of **prompt enhancements**. This feature helps you craft messages to get even better results from Roo. Here’s what’s new:
 
 - Works with **any provider** and API configuration, not just OpenRouter.
 - Fully customizable prompts to match your unique needs.
@@ -48,28 +48,26 @@ The second big feature in this release is a complete revamp of **prompt enhancem
 
 Whether you’re using GPT-4, other APIs, or switching configurations, this gives you total control over how your prompts are optimized.
 
-As always, we’d love to hear your thoughts and ideas! What features do you want to see in **v3.2**? Drop by https://www.reddit.com/r/roocline and join the discussion - we're building Roo Cline together. 🚀
-
 ## New in 3.0 - Chat Modes!
 
-You can now choose between different prompts for Roo Cline to better suit your workflow. Here’s what’s available:
+You can now choose between different prompts for Roo to better suit your workflow. Here’s what’s available:
 
-- **Code:** (existing behavior) The default mode where Cline helps you write code and execute tasks.
+- **Code:** (existing behavior) The default mode where Roo helps you write code and execute tasks.
 
-- **Architect:** "You are Cline, a software architecture expert..." Ideal for thinking through high-level technical design and system architecture. Can’t write code or run commands.
+- **Architect:** "You are Roo, a software architecture expert..." Ideal for thinking through high-level technical design and system architecture. Can’t write code or run commands.
 
-- **Ask:** "You are Cline, a knowledgeable technical assistant..." Perfect for asking questions about the codebase or digging into concepts. Also can’t write code or run commands.
+- **Ask:** "You are Roo, a knowledgeable technical assistant..." Perfect for asking questions about the codebase or digging into concepts. Also can’t write code or run commands.
 
 **Switching Modes:**
 It’s super simple! There’s a dropdown in the bottom left of the chat input to switch modes. Right next to it, you’ll find a way to switch between the API configuration profiles associated with the current mode (configured on the settings screen).
 
 **Why Add This?**
 
-- It keeps Cline from being overly eager to jump into solving problems when you just want to think or ask questions.
+- It keeps Roo from being overly eager to jump into solving problems when you just want to think or ask questions.
 - Each mode remembers the API configuration you last used with it. For example, you can use more thoughtful models like OpenAI o1 for Architect and Ask, while sticking with Sonnet or DeepSeek for coding tasks.
 - It builds on research suggesting better results when separating "thinking" from "coding," explained well in this very thoughtful [article](https://aider.chat/2024/09/26/architect.html) from aider.
 
-Right now, switching modes is a manual process. In the future, we’d love to give Cline the ability to suggest mode switches based on context. For now, we’d really appreciate your feedback on this feature.
+Right now, switching modes is a manual process. In the future, we’d love to give Roo the ability to suggest mode switches based on context. For now, we’d really appreciate your feedback on this feature.
 
 ---
 

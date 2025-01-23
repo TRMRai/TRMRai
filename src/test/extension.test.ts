@@ -8,8 +8,8 @@ const dotenv = require("dotenv")
 const testEnvPath = path.join(__dirname, ".test_env")
 dotenv.config({ path: testEnvPath })
 
-suite("Roo Cline Extension Test Suite", () => {
-	vscode.window.showInformationMessage("Starting Roo Cline extension tests.")
+suite("Roo Code Extension Test Suite", () => {
+	vscode.window.showInformationMessage("Starting Roo Code extension tests.")
 
 	test("Extension should be present", () => {
 		const extension = vscode.extensions.getExtension("RooVeterinaryInc.roo-cline")
@@ -117,16 +117,16 @@ suite("Roo Cline Extension Test Suite", () => {
 
 		// Test core commands are registered
 		const expectedCommands = [
-			'roo-cline.plusButtonClicked',
-			'roo-cline.mcpButtonClicked',
-			'roo-cline.historyButtonClicked',
-			'roo-cline.popoutButtonClicked',
-			'roo-cline.settingsButtonClicked',
-			'roo-cline.openInNewTab',
-			'roo-cline.explainCode',
-			'roo-cline.fixCode',
-			'roo-cline.improveCode'
-		];
+			"roo-cline.plusButtonClicked",
+			"roo-cline.mcpButtonClicked",
+			"roo-cline.historyButtonClicked",
+			"roo-cline.popoutButtonClicked",
+			"roo-cline.settingsButtonClicked",
+			"roo-cline.openInNewTab",
+			"roo-cline.explainCode",
+			"roo-cline.fixCode",
+			"roo-cline.improveCode",
+		]
 
 		for (const cmd of expectedCommands) {
 			assert.strictEqual(commands.includes(cmd), true, `Command ${cmd} should be registered`)
@@ -136,7 +136,7 @@ suite("Roo Cline Extension Test Suite", () => {
 	test("Views should be registered", () => {
 		const view = vscode.window.createWebviewPanel(
 			"roo-cline.SidebarProvider",
-			"Roo Cline",
+			"Roo Code",
 			vscode.ViewColumn.One,
 			{},
 		)
@@ -184,17 +184,12 @@ suite("Roo Cline Extension Test Suite", () => {
 
 		// Create webview panel with development options
 		const extensionUri = extension.extensionUri
-		const panel = vscode.window.createWebviewPanel(
-			"roo-cline.SidebarProvider",
-			"Roo Cline",
-			vscode.ViewColumn.One,
-			{
-				enableScripts: true,
-				enableCommandUris: true,
-				retainContextWhenHidden: true,
-				localResourceRoots: [extensionUri],
-			},
-		)
+		const panel = vscode.window.createWebviewPanel("roo-cline.SidebarProvider", "Roo Code", vscode.ViewColumn.One, {
+			enableScripts: true,
+			enableCommandUris: true,
+			retainContextWhenHidden: true,
+			localResourceRoots: [extensionUri],
+		})
 
 		try {
 			// Initialize webview with development context
@@ -299,7 +294,7 @@ suite("Roo Cline Extension Test Suite", () => {
 							m.type === "say" && m.text && m.text.toLowerCase().includes("cline"),
 					)
 					if (hasResponse) {
-						console.log('Found response containing "Cline" in provider messages')
+						console.log('Found response containing "Roo Code" in provider messages')
 						responseReceived = true
 						break
 					}
@@ -308,14 +303,14 @@ suite("Roo Cline Extension Test Suite", () => {
 				// Check provider.cline.clineMessages
 				const clineMessages = provider.cline?.clineMessages
 				if (clineMessages && clineMessages.length > 0) {
-					console.log("Cline messages:", JSON.stringify(clineMessages, null, 2))
+					console.log("Roo Code messages:", JSON.stringify(clineMessages, null, 2))
 					// @ts-ignore
 					const hasResponse = clineMessages.some(
 						(m: { type: string; text: string }) =>
 							m.type === "say" && m.text && m.text.toLowerCase().includes("cline"),
 					)
 					if (hasResponse) {
-						console.log('Found response containing "Cline" in cline messages')
+						console.log('Found response containing "Roo Code" in cline messages')
 						responseReceived = true
 						break
 					}
@@ -327,7 +322,7 @@ suite("Roo Cline Extension Test Suite", () => {
 			if (!responseReceived) {
 				console.log("Final provider state:", await provider.getState())
 				console.log("Final cline messages:", provider.cline?.clineMessages)
-				throw new Error('Did not receive expected response containing "Cline"')
+				throw new Error('Did not receive expected response containing "Code"')
 			}
 		} finally {
 			panel.dispose()
