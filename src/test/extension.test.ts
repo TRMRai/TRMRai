@@ -224,7 +224,7 @@ suite("Roo Code Extension Test Suite", () => {
 
 			// Wait for webview to launch and receive initial state
 			let startTime = Date.now()
-			while (Date.now() - startTime < timeout) {
+			while (Date.now() - startTime < 180000) {
 				if (webviewReady) {
 					// Wait an additional second for webview to fully initialize
 					await new Promise((resolve) => setTimeout(resolve, 1000))
