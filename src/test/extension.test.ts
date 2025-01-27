@@ -149,9 +149,9 @@ suite("Roo Code Extension Test Suite", () => {
 
 	test("Should handle prompt and response correctly", async function () {
 		// @ts-ignore
-		this.timeout(60000) // Increase timeout for API request
+		this.timeout(120000) // Increase timeout for API request
 
-		const timeout = 30000
+		const timeout = 60000
 		const interval = 1000
 
 		// Get extension instance
@@ -252,7 +252,7 @@ suite("Roo Code Extension Test Suite", () => {
 			while (Date.now() - startTime < timeout) {
 				const models = await provider.readOpenRouterModels()
 				if (models && Object.keys(models).length > 0) {
-					console.log("OpenRouter models loaded")
+					//console.log("OpenRouter models loaded")
 					break
 				}
 				await new Promise((resolve) => setTimeout(resolve, interval))
