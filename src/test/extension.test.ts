@@ -193,6 +193,7 @@ suite("Roo Code Extension Test Suite", () => {
 			retainContextWhenHidden: true,
 			localResourceRoots: [extensionUri],
 		})
+		console.log("Panel:", panel)
 
 		try {
 			// Initialize webview with development context
@@ -203,12 +204,12 @@ suite("Roo Code Extension Test Suite", () => {
 			}
 
 			// Initialize provider with panel
-			provider.resolveWebviewView(panel)
+			await provider.resolveWebviewView(panel)
 
 			// Set up message tracking
 			let webviewReady = false
 			let messagesReceived = false
-			const originalPostMessage = provider.postMessageToWebview.bind(provider)
+			const originalPostMessage = await provider.postMessageToWebview.bind(provider)
 			// @ts-ignore
 			provider.postMessageToWebview = async function (message) {
 				if (message.type === "state") {
