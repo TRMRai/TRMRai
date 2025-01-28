@@ -216,7 +216,6 @@ suite("Roo Code Extension Test Suite", () => {
 			// Set up message tracking with improved error handling
 			let webviewReady = false
 			let messagesReceived = false
-			let apiConfigured = false
 			const originalPostMessage = await provider.postMessageToWebview.bind(provider)
 
 			// @ts-ignore
@@ -230,10 +229,6 @@ suite("Roo Code Extension Test Suite", () => {
 							messagesReceived = true
 							console.log("Messages in state:", message.state.codeMessages)
 						}
-						if (message.state?.apiConfiguration?.openRouterApiKey) {
-							apiConfigured = true
-							console.log("API configuration completed")
-						}
 					}
 					await originalPostMessage(message)
 				} catch (error) {
@@ -245,22 +240,45 @@ suite("Roo Code Extension Test Suite", () => {
 			// Wait for API configuration
 			console.log("Waiting for API configuration...")
 			let startTime = Date.now()
+			let apiConfigured = false
+
+			// First verify the API key is stored
 			while (Date.now() - startTime < apiConfigTimeout) {
-				if (apiConfigured) {
-					console.log("API configuration successfully completed")
-					break
-				}
-				if (Date.now() - startTime > 60000 && !apiConfigured) {
+				try {
 					const state = await provider.getState()
-					console.log("API configuration status check at 1 minute mark:", state)
+					const storedKey = await provider.context.secrets.get("openRouterApiKey")
+
+					if (
+						storedKey &&
+						state.apiConfiguration.apiProvider === "openrouter" &&
+						state.apiConfiguration.openRouterModelId === "anthropic/claude-3.5-sonnet"
+					) {
+						console.log("API configuration verified")
+						apiConfigured = true
+						break
+					}
+
+					if (Date.now() - startTime > 60000) {
+						console.log("API configuration status check at 1 minute mark:", {
+							hasStoredKey: !!storedKey,
+							provider: state.apiConfiguration.apiProvider,
+							modelId: state.apiConfiguration.openRouterModelId,
+						})
+					}
+				} catch (error) {
+					console.error("Error checking API configuration:", error)
 				}
-				await new Promise((resolve) => setTimeout(resolve, 5000)) // Longer interval for API config check
+				await new Promise((resolve) => setTimeout(resolve, 5000))
 			}
 
 			if (!apiConfigured) {
-				const finalState = await provider.getState()
-				console.error("Final state before timeout:", finalState)
-				throw new Error("Timeout waiting for API configuration")
+				const state = await provider.getState()
+				const storedKey = await provider.context.secrets.get("openRouterApiKey")
+				throw new Error(
+					`API configuration timeout. Provider: ${state.apiConfiguration.apiProvider}, ` +
+						`Model: ${state.apiConfiguration.openRouterModelId}, ` +
+						`Has stored key: ${!!storedKey}`,
+				)
 			}
 
 			// Wait for webview to launch and receive initial state
