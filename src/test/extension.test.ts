@@ -153,7 +153,7 @@ suite("Roo Code Extension Test Suite", () => {
 
 		const timeout = 120000 // Increase timeout for CI
 		const interval = 2000 // Increase interval to reduce CPU usage
-		const authTimeout = 300000 // 5 minutes timeout for auth provider
+		const apiConfigTimeout = 300000 // 5 minutes timeout for API configuration
 
 		console.log("Starting prompt and response test...")
 
@@ -216,7 +216,7 @@ suite("Roo Code Extension Test Suite", () => {
 			// Set up message tracking with improved error handling
 			let webviewReady = false
 			let messagesReceived = false
-			let authProviderRegistered = false
+			let apiConfigured = false
 			const originalPostMessage = await provider.postMessageToWebview.bind(provider)
 
 			// @ts-ignore
@@ -230,9 +230,9 @@ suite("Roo Code Extension Test Suite", () => {
 							messagesReceived = true
 							console.log("Messages in state:", message.state.codeMessages)
 						}
-						if (message.state?.authProvider) {
-							authProviderRegistered = true
-							console.log("Auth provider registered")
+						if (message.state?.apiConfiguration?.openRouterApiKey) {
+							apiConfigured = true
+							console.log("API configuration completed")
 						}
 					}
 					await originalPostMessage(message)
@@ -242,22 +242,25 @@ suite("Roo Code Extension Test Suite", () => {
 				}
 			}
 
-			// Wait for auth provider to register
-			console.log("Waiting for auth provider registration...")
+			// Wait for API configuration
+			console.log("Waiting for API configuration...")
 			let startTime = Date.now()
-			while (Date.now() - startTime < authTimeout) {
-				if (authProviderRegistered) {
-					console.log("Auth provider successfully registered")
+			while (Date.now() - startTime < apiConfigTimeout) {
+				if (apiConfigured) {
+					console.log("API configuration successfully completed")
 					break
 				}
-				if (Date.now() - startTime > 60000 && !authProviderRegistered) {
-					console.log("Auth provider status check at 1 minute mark:", await provider.getState())
+				if (Date.now() - startTime > 60000 && !apiConfigured) {
+					const state = await provider.getState()
+					console.log("API configuration status check at 1 minute mark:", state)
 				}
-				await new Promise((resolve) => setTimeout(resolve, interval))
+				await new Promise((resolve) => setTimeout(resolve, 5000)) // Longer interval for API config check
 			}
 
-			if (!authProviderRegistered) {
-				throw new Error("Timeout waiting for auth provider registration")
+			if (!apiConfigured) {
+				const finalState = await provider.getState()
+				console.error("Final state before timeout:", finalState)
+				throw new Error("Timeout waiting for API configuration")
 			}
 
 			// Wait for webview to launch and receive initial state
