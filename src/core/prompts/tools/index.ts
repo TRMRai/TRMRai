@@ -3,6 +3,8 @@ import { getReadFileDescription } from "./read-file"
 import { getWriteToFileDescription } from "./write-to-file"
 import { getSearchFilesDescription } from "./search-files"
 import { getListFilesDescription } from "./list-files"
+import { getInsertContentDescription } from "./insert-content"
+import { getSearchAndReplaceDescription } from "./search-and-replace"
 import { getListCodeDefinitionNamesDescription } from "./list-code-definition-names"
 import { getBrowserActionDescription } from "./browser-action"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
@@ -13,7 +15,7 @@ import { getSwitchModeDescription } from "./switch-mode"
 import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
-import { ToolName, getToolName, getToolOptions, TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "../../../shared/tool-groups"
+import { ToolName, TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "../../../shared/tool-groups"
 import { ToolArgs } from "./types"
 
 // Map of tool names to their description functions
@@ -30,6 +32,8 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	use_mcp_tool: (args) => getUseMcpToolDescription(args),
 	access_mcp_resource: (args) => getAccessMcpResourceDescription(args),
 	switch_mode: () => getSwitchModeDescription(),
+	insert_content: (args) => getInsertContentDescription(args),
+	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
@@ -42,6 +46,7 @@ export function getToolDescriptionsForMode(
 	browserViewportSize?: string,
 	mcpHub?: McpHub,
 	customModes?: ModeConfig[],
+	experiments?: Record<string, boolean>,
 ): string {
 	const config = getModeConfig(mode, customModes)
 	const args: ToolArgs = {
@@ -60,7 +65,7 @@ export function getToolDescriptionsForMode(
 		const toolGroup = TOOL_GROUPS[groupName]
 		if (toolGroup) {
 			toolGroup.forEach((tool) => {
-				if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [])) {
+				if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [], experiments ?? {})) {
 					tools.add(tool)
 				}
 			})
@@ -100,4 +105,6 @@ export {
 	getUseMcpToolDescription,
 	getAccessMcpResourceDescription,
 	getSwitchModeDescription,
+	getInsertContentDescription,
+	getSearchAndReplaceDescription,
 }
