@@ -1413,6 +1413,28 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.postStateToWebview()
 	}
 
+	public async openCursorInstance(prompt: string, mode: string) {
+		// Construct command to open new Cursor instance
+		const cursorCommand = {
+			command: "workbench.action.newWindow",
+			args: [
+				{
+					mode,
+					prompt,
+				},
+			],
+		}
+
+		// Execute command to open new window
+		const result = await vscode.commands.executeCommand(cursorCommand.command, ...cursorCommand.args)
+		console.log("result", result)
+		const windows = vscode.window.state.active
+		console.log("windows", windows)
+		await vscode.commands.executeCommand("workbench.view.extension.roo-cline-ActivityBar")
+		await this.postMessageToWebview({ type: "action", action: "openCursorInstance" })
+		await this.postStateToWebview()
+	}
+
 	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
 		// Update mode's default config
 		const { mode } = await this.getState()

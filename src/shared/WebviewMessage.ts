@@ -81,6 +81,7 @@ export interface WebviewMessage {
 		| "deleteCustomMode"
 		| "setopenAiCustomModelInfo"
 		| "openCustomModesSettings"
+		| "openCursorInstance"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
