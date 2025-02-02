@@ -27,7 +27,7 @@
 - Run terminal commands
 - Automate browser actions
 - Integrate with any OpenAI-compatible or custom API/model
-- Adapt its “personality” and capabilities through **Custom Modes**
+- Adapt its personality and capabilities through **Custom Modes**
 
 Whether you’re seeking a flexible coding partner, a system architect, or specialized roles like a QA engineer or product manager, Roo Code can help you build software more efficiently.
 
