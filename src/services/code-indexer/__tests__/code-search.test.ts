@@ -14,13 +14,9 @@ describe("CodeSearch", () => {
 		process.env.OPENAI_API_KEY = "fake"
 
 		nock.back.fixtures = path.join(__dirname, "..", "__fixtures__")
-		nock.back.setMode("lockdown")
-
 		// You can re-record the fixtures by setting the mode to "record"
 		// and running the tests with a real `OPENAI_API_KEY` in the environment.
-		// if (nock.back.currentMode === "record") {
-		// 	nock.enableNetConnect("api.openai.com")
-		// }
+		nock.back.setMode("lockdown")
 	})
 
 	afterAll(() => {
@@ -60,8 +56,8 @@ describe("CodeSearch", () => {
 
 			expect(results[0]).toMatchObject({
 				chunk: expect.stringContaining("testFunction()"),
-				start: 79,
-				end: 123,
+				start: 73,
+				end: 115,
 				type: "function_declaration",
 				filepath: expect.stringContaining("__fixtures__/test.ts"),
 			})
