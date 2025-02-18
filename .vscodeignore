@@ -5,6 +5,7 @@
 .vscode-test/**
 out/**
 node_modules/**
+integration-tests/**
 src/**
 .gitignore
 .yarnrc
