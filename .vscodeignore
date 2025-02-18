@@ -42,3 +42,6 @@ webview-ui/node_modules/**
 
 # Include icons
 !assets/icons/**
+
+# LanceDB
+lancedb/**
