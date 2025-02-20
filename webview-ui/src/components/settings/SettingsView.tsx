@@ -217,12 +217,15 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 	const onConfirmDialogResult = useCallback((confirm: boolean) => {
 		if (confirm) {
 			setChangeDetected(false)
-			// Wait for the change detection to be updated
-			setTimeout(() => {
-				confirmDialogHandler.current?.()
-			}, 100)
 		}
 	}, [])
+
+	useEffect(() => {
+	  if (!isChangeDetected && confirmDialogHandler.current) {
+	    confirmDialogHandler.current();
+	    confirmDialogHandler.current = undefined; // Clear the handler after execution
+	  }
+	}, [isChangeDetected]);
 
 	const handleResetState = () => {
 		vscode.postMessage({ type: "resetState" })
