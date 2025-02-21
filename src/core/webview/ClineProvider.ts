@@ -18,7 +18,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ApiConfigMeta, ExtensionMessage, ClineMessage } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { Mode, CustomModePrompts, PromptComponent, defaultModeSlug } from "../../shared/modes"
@@ -277,7 +277,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return
 		}
 
-		await visibleProvider.initClineWithTask(prompt)
+		await visibleProvider.initClineWithTask(prompt, undefined, undefined)
 	}
 
 	public static async handleTerminalAction(
@@ -397,7 +397,80 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.outputChannel.appendLine("Webview view resolved")
 	}
 
-	public async initClineWithTask(task?: string, images?: string[]) {
+	/**
+	 * Adds a child task's result as a text message to a parent task's messages and saves it
+	 */
+	private async addChildTaskResultToParent(taskId: string, result: string): Promise<void> {
+		const taskDir = path.join(this.context.globalStorageUri.fsPath, "tasks", taskId)
+		const messagesPath = path.join(taskDir, GlobalFileNames.uiMessages)
+
+		// Read existing messages
+		let messages: ClineMessage[] = []
+		if (await fileExistsAtPath(messagesPath)) {
+			messages = JSON.parse(await fs.readFile(messagesPath, "utf8"))
+		}
+
+		// Add result as text message from child task
+		messages.push({
+			ts: Date.now(),
+			type: "say",
+			say: "text",
+			text: result,
+		})
+
+		// Save updated messages
+		await fs.writeFile(messagesPath, JSON.stringify(messages))
+	}
+
+	/**
+	 * Handles returning a result to a parent task
+	 */
+	public async handleTaskResult(parentTaskId: string, result: string): Promise<void> {
+		try {
+			// Get parent task data
+			const { historyItem, apiConversationHistory } = await this.getTaskWithId(parentTaskId)
+
+			// Add text message to parent task's UI messages
+			await this.addChildTaskResultToParent(parentTaskId, result)
+
+			// Add message to parent task's API conversation history
+			const message: Anthropic.MessageParam & { ts?: number } = {
+				role: "assistant",
+				content: [
+					{
+						type: "text",
+						text: result,
+					},
+				],
+				ts: Date.now(),
+			}
+			apiConversationHistory.push(message)
+
+			// Save updated API conversation history
+			const taskDir = path.join(this.context.globalStorageUri.fsPath, "tasks", parentTaskId)
+			const apiHistoryPath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
+			await fs.writeFile(apiHistoryPath, JSON.stringify(apiConversationHistory))
+
+			// Switch back to parent task
+			await this.initClineWithHistoryItem(historyItem)
+			await this.postMessageToWebview({
+				type: "action",
+				action: "chatButtonClicked",
+			})
+			// Wait for chat view to load before clicking the button
+			await delay(300)
+			// Hit the primary button to continue the parent task
+			await this.postMessageToWebview({
+				type: "invoke",
+				invoke: "primaryButtonClick",
+			})
+		} catch (error) {
+			this.outputChannel.appendLine(`Failed to handle task result: ${error}`)
+			throw error
+		}
+	}
+
+	public async initClineWithTask(task?: string, images?: string[], parentTaskId?: string) {
 		await this.clearTask()
 		const {
 			apiConfiguration,
@@ -424,6 +497,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			images,
 			undefined,
 			experiments,
+			parentTaskId,
 		)
 	}
 
@@ -774,7 +848,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						// Could also do this in extension .ts
 						//this.postMessageToWebview({ type: "text", text: `Extension: ${Date.now()}` })
 						// initializing new instance of Cline will make sure that any agentically running promises in old instance don't affect our new task. this essentially creates a fresh slate for the new task
-						await this.initClineWithTask(message.text, message.images)
+						// Pass the current task's ID as the parent ID if it exists
+						const parentTaskId = this.cline?.taskId
+						await this.initClineWithTask(message.text, message.images, parentTaskId)
 						break
 					case "apiConfiguration":
 						if (message.apiConfiguration) {

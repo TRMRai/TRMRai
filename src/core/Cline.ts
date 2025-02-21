@@ -75,6 +75,7 @@ type UserContent = Array<
 
 export class Cline {
 	readonly taskId: string
+	readonly parentTaskId?: string
 	api: ApiHandler
 	private terminalManager: TerminalManager
 	private urlContentFetcher: UrlContentFetcher
@@ -129,12 +130,14 @@ export class Cline {
 		images?: string[] | undefined,
 		historyItem?: HistoryItem | undefined,
 		experiments?: Record<string, boolean>,
+		parentTaskId?: string,
 	) {
 		if (!task && !images && !historyItem) {
 			throw new Error("Either historyItem or task/images must be provided")
 		}
 
 		this.taskId = crypto.randomUUID()
+		this.parentTaskId = parentTaskId
 		this.api = buildApiHandler(apiConfiguration)
 		this.terminalManager = new TerminalManager()
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
@@ -2553,7 +2556,7 @@ export class Cline {
 								const provider = this.providerRef.deref()
 								if (provider) {
 									await provider.handleModeSwitch(mode)
-									await provider.initClineWithTask(message)
+									await provider.initClineWithTask(message, undefined, this.taskId)
 									pushToolResult(
 										`Successfully created new task in ${targetMode.name} mode with message: ${message}`,
 									)
@@ -2667,10 +2670,22 @@ export class Cline {
 									await this.say("completion_result", result, undefined, false)
 								}
 
+								// If this is a child task, return result to parent
+								if (this.parentTaskId) {
+									const provider = this.providerRef.deref()
+									if (provider) {
+										try {
+											await provider.handleTaskResult(this.parentTaskId, result)
+										} catch (error) {
+											console.error("Failed to return result to parent task:", error)
+										}
+									}
+								}
+
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
 								const { response, text, images } = await this.ask("completion_result", "", false)
 								if (response === "yesButtonClicked") {
-									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
+									pushToolResult("") // signals to recursive loop to stop
 									break
 								}
 								await this.say("user_feedback", text ?? "", images)

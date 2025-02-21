@@ -8,4 +8,5 @@ export type HistoryItem = {
 	cacheReads?: number
 	totalCost: number
 	size?: number
+	parentTaskId?: string // ID of the parent task if this was created via new_task
 }
