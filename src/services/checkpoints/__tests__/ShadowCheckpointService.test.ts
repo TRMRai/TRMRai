@@ -9,6 +9,8 @@ import { simpleGit, SimpleGit } from "simple-git"
 
 import { fileExistsAtPath } from "../../../utils/fs"
 
+import { initWorkspaceRepo } from "./initWorkspaceRepo"
+
 import { ShadowCheckpointService } from "../ShadowCheckpointService"
 import { RepoPerTaskCheckpointService } from "../RepoPerTaskCheckpointService"
 import { RepoPerWorkspaceCheckpointService } from "../RepoPerWorkspaceCheckpointService"
@@ -16,6 +18,8 @@ import { RepoPerWorkspaceCheckpointService } from "../RepoPerWorkspaceCheckpoint
 jest.mock("globby", () => ({
 	globby: jest.fn().mockResolvedValue([]),
 }))
+
+export const tmpDir = path.join(os.tmpdir(), "CheckpointService")
 
 describe.each([
 	[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"],
