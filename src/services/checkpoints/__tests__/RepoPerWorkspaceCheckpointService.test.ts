@@ -13,32 +13,40 @@ jest.mock("globby", () => ({
 }))
 
 describe("RepoPerWorkspaceCheckpointService", () => {
-	const tmpDir = path.join(os.tmpdir(), "RepoPerWorkspaceCheckpointService")
-	const shadowDir = path.join(tmpDir, "shadow-dir")
-	const workspaceDir = path.join(tmpDir, "workspace-dir")
-	const log = console.log
+	const tmpDir = path.join(os.tmpdir(), RepoPerWorkspaceCheckpointService.name)
+	const globalStorageDir = path.join(tmpDir, "globalStorage")
+	const workspaceDir = path.join(tmpDir, "workspace")
+	const log = () => {}
 
 	beforeEach(async () => {
 		await initWorkspaceRepo({ workspaceDir })
-		await fs.mkdir(shadowDir, { recursive: true })
+		await fs.mkdir(globalStorageDir, { recursive: true })
 	})
 
 	afterEach(async () => {
-		await fs.rm(shadowDir, { recursive: true, force: true })
+		await fs.rm(globalStorageDir, { recursive: true, force: true })
 		await fs.rm(workspaceDir, { recursive: true, force: true })
 	})
 
 	it("does not achieve isolation", async () => {
-		const task1 = "task1"
-		const service1 = RepoPerWorkspaceCheckpointService.create({ taskId: task1, shadowDir, workspaceDir, log })
+		const service1 = RepoPerWorkspaceCheckpointService.create({
+			taskId: "task1",
+			shadowDir: globalStorageDir,
+			workspaceDir,
+			log,
+		})
 		await service1.initShadowGit()
 
 		await fs.writeFile(path.join(workspaceDir, "foo.txt"), "foo")
 		const commit1 = await service1.saveCheckpoint("foo")
 		expect(commit1?.commit).toBeTruthy()
 
-		const task2 = "task2"
-		const service2 = RepoPerWorkspaceCheckpointService.create({ taskId: task2, shadowDir, workspaceDir, log })
+		const service2 = RepoPerWorkspaceCheckpointService.create({
+			taskId: "task2",
+			shadowDir: globalStorageDir,
+			workspaceDir,
+			log,
+		})
 		await service2.initShadowGit()
 
 		await fs.writeFile(path.join(workspaceDir, "bar.txt"), "bar")
