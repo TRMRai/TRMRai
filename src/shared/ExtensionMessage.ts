@@ -58,6 +58,7 @@ export interface ExtensionMessage {
 		| "ttsStop"
 		| "maxReadFileLine"
 		| "fileSearchResults"
+		| "bugReportInfo"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -100,6 +101,7 @@ export interface ExtensionMessage {
 		label?: string
 	}>
 	error?: string
+	info?: Record<string, any> // Environment information for bug reports
 }
 
 export interface ApiConfigMeta {

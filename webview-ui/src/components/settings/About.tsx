@@ -1,7 +1,7 @@
-import { HTMLAttributes } from "react"
+import { HTMLAttributes, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Trans } from "react-i18next"
-import { Info } from "lucide-react"
+import { Bug, Info } from "lucide-react"
 
 import { VSCodeButton, VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 
@@ -11,6 +11,7 @@ import { vscode } from "@/utils/vscode"
 import { cn } from "@/lib/utils"
 
 import { SectionHeader } from "./SectionHeader"
+import { BugReportDialog } from "./BugReportDialog"
 import { Section } from "./Section"
 
 type AboutProps = HTMLAttributes<HTMLDivElement> & {
@@ -21,6 +22,7 @@ type AboutProps = HTMLAttributes<HTMLDivElement> & {
 
 export const About = ({ version, telemetrySetting, setTelemetrySetting, className, ...props }: AboutProps) => {
 	const { t } = useAppTranslation()
+	const [showBugReportDialog, setShowBugReportDialog] = useState(false)
 
 	return (
 		<div className={cn("flex flex-col gap-2", className)} {...props}>
@@ -73,7 +75,20 @@ export const About = ({ version, telemetrySetting, setTelemetrySetting, classNam
 						{t("settings:footer.reset.button")}
 					</VSCodeButton>
 				</div>
+
+				<div className="flex justify-between items-center gap-3">
+					<p>{t("settings:footer.bugreport.description")}</p>
+					<VSCodeButton
+						onClick={() => setShowBugReportDialog(true)}
+						appearance="secondary"
+						className="shrink-0">
+						<Bug className="w-4 h-4 text-vscode-foreground mr-1" />
+						{t("settings:footer.bugreport.button")}
+					</VSCodeButton>
+				</div>
 			</Section>
+
+			{showBugReportDialog && <BugReportDialog onClose={() => setShowBugReportDialog(false)} />}
 		</div>
 	)
 }

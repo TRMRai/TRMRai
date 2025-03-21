@@ -116,6 +116,8 @@ export interface WebviewMessage {
 		| "language"
 		| "maxReadFileLine"
 		| "searchFiles"
+		| "getBugReportInfo"
+		| "openExternal"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -141,6 +143,7 @@ export interface WebviewMessage {
 	source?: "global" | "project"
 	requestId?: string
 	ids?: string[]
+	url?: string // URL for openExternal message
 }
 
 export const checkoutDiffPayloadSchema = z.object({

@@ -2020,6 +2020,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.postStateToWebview()
 						break
 					}
+
+					case "getBugReportInfo": {
+						// Send environment information back to the webview for bug reporting
+						const properties = await this.getTelemetryProperties()
+						await this.postMessageToWebview({
+							type: "bugReportInfo",
+							info: properties,
+						})
+						break
+					}
+
+					case "openExternal": {
+						// Open an external URL (used for GitHub issue creation)
+						if (message.url) {
+							vscode.env.openExternal(vscode.Uri.parse(message.url))
+						}
+						break
+					}
 				}
 			},
 			null,

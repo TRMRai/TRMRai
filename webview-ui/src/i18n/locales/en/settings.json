@@ -372,6 +372,10 @@
 		"reset": {
 			"description": "Reset all global state and secret storage in the extension.",
 			"button": "Reset"
+		},
+		"bugreport": {
+			"description": "Found a bug? Report it to help us improve Roo Code.",
+			"button": "Report Bug"
 		}
 	},
 	"thinkingBudget": {
@@ -423,5 +427,12 @@
 	"labels": {
 		"customArn": "Custom ARN",
 		"useCustomArn": "Use custom ARN..."
+	},
+	"bugreport": {
+		"title": "Report a Bug",
+		"description": "The following information will be included in your bug report to help us diagnose the issue:",
+		"copy": "Copy Info",
+		"copied": "Copied!",
+		"createIssue": "Create GitHub Issue"
 	}
 }
