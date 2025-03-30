@@ -333,7 +333,17 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToClineMessages(message: ClineMessage) {
-		this.clineMessages.push(message)
+		// Find the correct position to insert the message based on timestamp
+		const insertIndex = this.clineMessages.findIndex((existingMsg) => existingMsg.ts > message.ts)
+
+		if (insertIndex === -1) {
+			// If no message with a later timestamp is found, append to the end
+			this.clineMessages.push(message)
+		} else {
+			// Insert the message at the correct position to maintain chronological order
+			this.clineMessages.splice(insertIndex, 0, message)
+		}
+
 		await this.providerRef.deref()?.postStateToWebview()
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
@@ -487,9 +497,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
 		}
 
-		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
+		await pWaitFor(() => this.askResponse !== undefined || !!(this.lastMessageTs && this.lastMessageTs > askTs), {
+			interval: 100,
+		})
 
-		if (this.lastMessageTs !== askTs) {
+		if (this.lastMessageTs && this.lastMessageTs > askTs) {
 			// Could happen if we send multiple asks in a row i.e. with
 			// command_output. It's important that when we know an ask could
 			// fail, it is handled gracefully.
@@ -517,6 +529,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		partial?: boolean,
 		checkpoint?: Record<string, unknown>,
 		progressStatus?: ToolProgressStatus,
+		ts?: number,
 	): Promise<undefined> {
 		if (this.abort) {
 			throw new Error(`[Cline#say] task ${this.taskId}.${this.instanceId} aborted`)
@@ -536,7 +549,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					this.updateClineMessage(lastMessage)
 				} else {
 					// this is a new partial message, so add it with partial state
-					const sayTs = Date.now()
+					const sayTs = ts ?? Date.now()
 					this.lastMessageTs = sayTs
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, partial })
 				}
@@ -558,14 +571,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 					this.updateClineMessage(lastMessage)
 				} else {
 					// This is a new and complete message, so add it like normal.
-					const sayTs = Date.now()
+					const sayTs = ts ?? Date.now()
 					this.lastMessageTs = sayTs
 					await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images })
 				}
 			}
 		} else {
 			// this is a new non-partial message, so add it like normal
-			const sayTs = Date.now()
+			const sayTs = ts ?? Date.now()
 			this.lastMessageTs = sayTs
 			await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, checkpoint })
 		}
@@ -2407,10 +2420,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 				try {
 					this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
 
-					this.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }).catch((err) => {
-						log("[Cline#initializeCheckpoints] caught unexpected error in say('checkpoint_saved')")
-						console.error(err)
-					})
+					// If the checkpoint is the first one, use the timestamp of the first message plus 1
+					// otherwise, use the current timestamp
+					const ts = isFirst ? this.clineMessages[0].ts + 1 : undefined
+
+					this.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }, undefined, ts).catch(
+						(err) => {
+							log("[Cline#initializeCheckpoints] caught unexpected error in say('checkpoint_saved')")
+							console.error(err)
+						},
+					)
 				} catch (err) {
 					log(
 						"[Cline#initializeCheckpoints] caught unexpected error in on('checkpoint'), disabling checkpoints",
