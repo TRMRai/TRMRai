@@ -8,3 +8,11 @@ export const GlobalFileNames = {
 	unboundModels: "unbound_models.json",
 	customModes: "custom_modes.json",
 }
+
+/**
+ * File locations for mode configuration
+ */
+export enum ModeFileLocations {
+	LEGACY_ROOMODES = ".roomodes",
+	MODES_DIRECTORY = ".roo/modes",
+}
