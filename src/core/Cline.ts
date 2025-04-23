@@ -90,7 +90,7 @@ import { truncateConversationIfNeeded } from "./sliding-window"
 import { ClineProvider } from "./webview/ClineProvider"
 import { validateToolUse } from "./mode-validator"
 import { MultiSearchReplaceDiffStrategy } from "./diff/strategies/multi-search-replace"
-import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages } from "./task-persistence"
+import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "./task-persistence"
 
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
@@ -336,7 +336,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	private async saveClineMessages() {
 		try {
-			const { historyItem, tokenUsage } = await saveTaskMessages({
+			await saveTaskMessages({
+				messages: this.clineMessages,
+				taskId: this.taskId,
+				globalStoragePath: this.globalStoragePath,
+			})
+
+			const { historyItem, tokenUsage } = await taskMetadata({
 				messages: this.clineMessages,
 				taskId: this.taskId,
 				taskNumber: this.taskNumber,
