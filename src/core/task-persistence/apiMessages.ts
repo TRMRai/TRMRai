@@ -18,7 +18,7 @@ export async function readApiMessages({
 	globalStoragePath: string
 }): Promise<ApiMessage[]> {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
-	const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
+	const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
 
 	if (await fileExistsAtPath(filePath)) {
 		return JSON.parse(await fs.readFile(filePath, "utf8"))

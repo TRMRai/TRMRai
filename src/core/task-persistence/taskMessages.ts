@@ -17,7 +17,7 @@ export async function readTaskMessages({
 	globalStoragePath,
 }: ReadTaskMessagesOptions): Promise<ClineMessage[]> {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
-	const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
+	const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
 	const fileExists = await fileExistsAtPath(filePath)
 
 	if (fileExists) {
