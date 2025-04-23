@@ -2552,6 +2552,144 @@
             ]
           }
         ]
+      },
+      {
+        "name": "va_bedrock_v2v",
+        "auto_start": true,
+        "nodes": [
+          {
+            "type": "extension",
+            "name": "agora_rtc",
+            "addon": "agora_rtc",
+            "extension_group": "rtc",
+            "property": {
+              "app_id": "${env:AGORA_APP_ID}",
+              "token": "",
+              "channel": "ten_agent_test",
+              "stream_id": 1234,
+              "remote_stream_id": 123,
+              "subscribe_audio": true,
+              "publish_audio": true,
+              "publish_data": true,
+              "subscribe_audio_sample_rate": 24000
+            }
+          },
+          {
+            "type": "extension",
+            "name": "v2v",
+            "addon": "bedrock_v2v_python",
+            "extension_group": "llm",
+            "property": {
+              "access_key_id": "${env:AWS_ACCESS_KEY_ID}",
+              "channels": 1,
+              "max_tokens": 512,
+              "model": "amazon.nova-sonic-v1:0",
+              "prompt": "Now you are an intelligent assistant with real-time interaction capabilities. I will provide you with a series of real-time video image information. Please understand these images as video frames. Based on the images and the user's input, engage in a conversation with the user, remembering the dialogue content in a concise and clear manner.",
+              "region": "us-east-1",
+              "sample_rate": 16000,
+              "sample_size_bits": 16,
+              "secret_access_key": "${env:AWS_SECRET_ACCESS_KEY}",
+              "temperature": 0.7,
+              "topK": 20,
+              "topP": 0.5,
+              "voice_id": "matthew"
+            }
+          },
+          {
+            "type": "extension",
+            "name": "message_collector",
+            "addon": "message_collector",
+            "extension_group": "transcriber",
+            "property": {}
+          }
+        ],
+        "connections": [
+          {
+            "extension": "agora_rtc",
+            "cmd": [
+              {
+                "name": "on_user_joined",
+                "dest": [
+                  {
+                    "extension": "v2v"
+                  }
+                ]
+              },
+              {
+                "name": "on_user_left",
+                "dest": [
+                  {
+                    "extension": "v2v"
+                  }
+                ]
+              },
+              {
+                "name": "on_connection_failure",
+                "dest": [
+                  {
+                    "extension": "v2v"
+                  }
+                ]
+              }
+            ],
+            "audio_frame": [
+              {
+                "name": "pcm_frame",
+                "dest": [
+                  {
+                    "extension": "v2v"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "extension": "v2v",
+            "cmd": [
+              {
+                "name": "flush",
+                "dest": [
+                  {
+                    "extension": "agora_rtc"
+                  }
+                ]
+              }
+            ],
+            "data": [
+              {
+                "name": "text_data",
+                "dest": [
+                  {
+                    "extension": "message_collector"
+                  }
+                ]
+              }
+            ],
+            "audio_frame": [
+              {
+                "name": "pcm_frame",
+                "dest": [
+                  {
+                    "extension": "agora_rtc"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "extension": "message_collector",
+            "data": [
+              {
+                "name": "data",
+                "dest": [
+                  {
+                    "extension": "agora_rtc"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ],
     "log_level": 3

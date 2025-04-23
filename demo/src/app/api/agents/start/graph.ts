@@ -39,6 +39,10 @@ export const voiceNameMap: LanguageMap = {
         openai: {
             male: "ash",
             female: "shimmer"
+        },
+        novasonic: {
+            male: "matthew",
+            female: "tiffany"
         }
     },
     "ja-JP": {
@@ -288,8 +292,16 @@ export const getGraphProperties = (
                 "azure_synthesis_voice_name": voiceNameMap[language]["azure"][voiceType]
             }
         }
+    } else if (graphName === "va_bedrock_v2v") {
+        return {
+            "v2v": {
+                "model": "amazon.nova-sonic-v1:0",
+                "voice": voiceNameMap[language]["novasonic"][voiceType],
+                "language": language,
+                "prompt": prompt,
+                "greeting": combined_greeting,
+            }
+        }
     }
-
-
     return {}
 }
