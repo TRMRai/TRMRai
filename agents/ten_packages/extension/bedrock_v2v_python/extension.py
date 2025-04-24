@@ -7,7 +7,6 @@ from typing import List
 from ten import (
     AudioFrame,
     VideoFrame,
-    AsyncExtension,
     AsyncTenEnv,
     Cmd,
     StatusCode,
@@ -20,7 +19,6 @@ from ten_ai_base.llm import AsyncLLMBaseExtension
 from ten_ai_base.types import (
     LLMToolMetadata,
     LLMToolResult,
-    LLMToolMetadataParameter,
     LLMChatCompletionContentPartParam,
 )
 from ten_ai_base.const import CMD_PROPERTY_RESULT, CMD_TOOL_CALL
@@ -385,7 +383,7 @@ class SimpleNovaSonic:
         json_string = json.dumps(json_dict)
         return json_string
 
-    def _convert_to_content_parts(self, content: LLMChatCompletionContentPartParam):
+    def convert_to_content_parts(self, content: LLMChatCompletionContentPartParam):
         """Convert content parts to a format suitable for Bedrock."""
         content_parts = []
 
@@ -586,6 +584,7 @@ class BedrockV2VExtension(AsyncLLMBaseExtension):
         self.config = BedrockV2VConfig()
         self.transcript: str = ""
         self.loop = None
+        self.ctx = {}
 
     async def on_init(self, ten_env: AsyncTenEnv) -> None:
         await super().on_init(ten_env)
@@ -714,7 +713,7 @@ class BedrockV2VExtension(AsyncLLMBaseExtension):
             result_content = tool_result["content"]
 
             # Convert the result to a format suitable for Bedrock
-            output = self.nova_client._convert_to_content_parts(result_content)
+            output = self.nova_client.convert_to_content_parts(result_content)
             await self.nova_client.send_tool_response(tool_call_id, output)
             ten_env.log_info(f"Tool call completed: {name}")
         else:
@@ -961,3 +960,13 @@ class BedrockV2VExtension(AsyncLLMBaseExtension):
     ) -> None:
         video_frame_name = video_frame.get_name()
         ten_env.log_debug("on_video_frame name {}".format(video_frame_name))
+        
+    async def on_call_chat_completion(self, async_ten_env, **kargs):
+        """Implementation of abstract method from AsyncLLMBaseExtension."""
+        async_ten_env.log_info("on_call_chat_completion not supported in BedrockV2VExtension")
+        return None
+        
+    async def on_data_chat_completion(self, async_ten_env, **kargs):
+        """Implementation of abstract method from AsyncLLMBaseExtension."""
+        async_ten_env.log_info("on_data_chat_completion not supported in BedrockV2VExtension")
+        return None
