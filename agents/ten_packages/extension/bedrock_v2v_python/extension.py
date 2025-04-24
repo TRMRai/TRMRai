@@ -960,13 +960,17 @@ class BedrockV2VExtension(AsyncLLMBaseExtension):
     ) -> None:
         video_frame_name = video_frame.get_name()
         ten_env.log_debug("on_video_frame name {}".format(video_frame_name))
-        
+
     async def on_call_chat_completion(self, async_ten_env, **kargs):
         """Implementation of abstract method from AsyncLLMBaseExtension."""
-        async_ten_env.log_info("on_call_chat_completion not supported in BedrockV2VExtension")
+        async_ten_env.log_info(
+            "on_call_chat_completion not supported in BedrockV2VExtension"
+        )
         return None
-        
+
     async def on_data_chat_completion(self, async_ten_env, **kargs):
         """Implementation of abstract method from AsyncLLMBaseExtension."""
-        async_ten_env.log_info("on_data_chat_completion not supported in BedrockV2VExtension")
+        async_ten_env.log_info(
+            "on_data_chat_completion not supported in BedrockV2VExtension"
+        )
         return None
