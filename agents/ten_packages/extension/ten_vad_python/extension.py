@@ -15,11 +15,17 @@ from ten import (
 )
 from .config import TENVADConfig
 from .ten_aivad import tenAiVad
+from enum import Enum, auto
 
 import numpy as np
 
 BYTES_PER_SAMPLE = 2
 SAMPLE_RATE = 16000
+
+
+class VADState(Enum):
+    IDLE = auto()
+    SPEECHING = auto()
 
 
 class TENVADPythonExtension(AsyncExtension):
@@ -32,6 +38,13 @@ class TENVADPythonExtension(AsyncExtension):
         self.vad = None
         self.audio_buffer: bytearray = bytearray()
 
+        # VAD state
+        self.state = VADState.IDLE
+        self.probe_window: list[float] = []
+        self.window_size: int = 0
+        self.prefix_window_size: int = 0
+        self.silence_window_size: int = 0
+
     async def on_init(self, ten_env: AsyncTenEnv) -> None:
         config_json = await ten_env.get_property_to_json("")
         self.config = TENVADConfig.model_validate_json(config_json)
@@ -39,6 +52,14 @@ class TENVADPythonExtension(AsyncExtension):
 
         self.hop_size = self.config.hop_size_ms * SAMPLE_RATE // 1000
         ten_env.log_debug(f"hop_size: {self.hop_size}")
+
+        # Calculate window size based on config
+        self.silence_window = self.config.silence_duration_ms // self.config.hop_size_ms
+        self.prefix_window = self.config.prefix_padding_ms // self.config.hop_size_ms
+        self.window_size = max(self.silence_window, self.prefix_window)
+        ten_env.log_debug(
+            f"window_size: {self.window_size}, prefix_window_size: {self.prefix_window}, silence_window_size: {self.silence_window}"
+        )
 
     async def on_start(self, ten_env: AsyncTenEnv) -> None:
 
@@ -62,6 +83,34 @@ class TENVADPythonExtension(AsyncExtension):
     async def on_data(self, ten_env: AsyncTenEnv, data: Data) -> None:
         pass
 
+    def _check_state_transition(self, ten_env: AsyncTenEnv) -> None:
+        if len(self.probe_window) != self.window_size:
+            return
+
+        if self.state == VADState.IDLE:
+            # Check if we should transition to SPEECHING
+            prefix_probes = self.probe_window[-self.prefix_window_size :]
+            all_above_threshold = all(
+                p >= self.config.vad_threshold for p in prefix_probes
+            )
+            if all_above_threshold:
+                self.state = VADState.SPEECHING
+                ten_env.log_debug(
+                    f"State transition: IDLE -> SPEECHING (probes: {prefix_probes})"
+                )
+
+        elif self.state == VADState.SPEECHING:
+            # Check if we should transition to IDLE
+            silence_probes = self.probe_window[-self.silence_window_size :]
+            all_below_threshold = all(
+                p < self.config.vad_threshold for p in silence_probes
+            )
+            if all_below_threshold:
+                self.state = VADState.IDLE
+                ten_env.log_debug(
+                    f"State transition: SPEECHING -> IDLE (probes: {silence_probes})"
+                )
+
     async def on_audio_frame(
         self, ten_env: AsyncTenEnv, audio_frame: AudioFrame
     ) -> None:
@@ -77,7 +126,15 @@ class TENVADPythonExtension(AsyncExtension):
 
         # vad process
         probe = self.vad.process(np.frombuffer(audio_buf, dtype=np.int16))
-        ten_env.log_debug(f"vad probe: {probe}")
+        # ten_env.log_debug(f"vad probe: {probe}")
+
+        # Update probe window
+        self.probe_window.append(probe)
+        if len(self.probe_window) > self.window_size:
+            self.probe_window.pop(0)
+
+        # Check state transition
+        self._check_state_transition(ten_env)
 
     def _dump_audio_if_needed(self, buf: bytearray, suffix: str) -> None:
         if not self.config.dump:
