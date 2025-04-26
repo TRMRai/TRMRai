@@ -80,6 +80,9 @@ class ExtensionTesterBasic(AsyncExtensionTester):
             else:
                 assert False, f"{self.next_expect_cmd} cmd not received"
 
+        cmd_result = CmdResult.create(StatusCode.OK)
+        await ten_env.return_result(cmd_result, cmd)
+
 
 def test_basic():
     cur_dir = os.path.dirname(os.path.abspath(__file__))
@@ -98,6 +101,13 @@ def test_basic():
         "dump_path": "",
     }
 
+    tester = ExtensionTesterBasic(test_file)
+    tester.set_test_mode_single("ten_vad_python", json.dumps(property_json))
+    tester.run()
+
+    # test output_speaking_only
+    property_json["output_speaking_only"] = True
+    property_json["dump"] = True
     tester = ExtensionTesterBasic(test_file)
     tester.set_test_mode_single("ten_vad_python", json.dumps(property_json))
     tester.run()

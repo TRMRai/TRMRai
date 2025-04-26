@@ -5,7 +5,7 @@
 #
 from ten import (
     AudioFrame,
-    VideoFrame,
+    AudioFrameDataFmt,
     AsyncExtension,
     AsyncTenEnv,
     Cmd,
@@ -19,6 +19,7 @@ from enum import Enum, auto
 
 import numpy as np
 import os
+import asyncio
 
 BYTES_PER_SAMPLE = 2
 SAMPLE_RATE = 16000
@@ -59,9 +60,13 @@ class TENVADPythonExtension(AsyncExtension):
         ten_env.log_debug(f"hop_size: {self.hop_size}")
 
         # Calculate window size based on config
-        self.silence_window = self.config.silence_duration_ms // self.config.hop_size_ms
-        self.prefix_window = self.config.prefix_padding_ms // self.config.hop_size_ms
-        self.window_size = max(self.silence_window, self.prefix_window)
+        self.silence_window_size = (
+            self.config.silence_duration_ms // self.config.hop_size_ms
+        )
+        self.prefix_window_size = (
+            self.config.prefix_padding_ms // self.config.hop_size_ms
+        )
+        self.window_size = max(self.silence_window_size, self.prefix_window_size)
         ten_env.log_debug(
             f"window_size: {self.window_size}, prefix_window_size: {self.prefix_window_size}, silence_window_size: {self.silence_window_size}"
         )
@@ -110,25 +115,22 @@ class TENVADPythonExtension(AsyncExtension):
 
                 # send start_of_speaking cmd
                 ten_env.log_debug("send_cmd: start_of_speaking")
-                await ten_env.send_cmd(Cmd.create("start_of_speaking"))
+                await asyncio.create_task(
+                    ten_env.send_cmd(Cmd.create("start_of_speaking"))
+                )
 
                 # In speaking only mode, output buffered audio
-                if self.config.output_speaking_only and self.prefix_buffer:
-                    # Create a new audio frame with the buffered data
-                    audio_frame = AudioFrame.create("pcm_frame")
-                    audio_frame.set_bytes_per_sample(BYTES_PER_SAMPLE)
-                    audio_frame.set_sample_rate(SAMPLE_RATE)
-                    audio_frame.set_number_of_channels(1)
-                    audio_frame.set_data_fmt(AudioFrameDataFmt.INTERLEAVE)
-                    audio_frame.set_samples_per_channel(
-                        len(self.prefix_buffer) // BYTES_PER_SAMPLE
-                    )
-                    audio_frame.alloc_buf(len(self.prefix_buffer))
-                    buf = audio_frame.lock_buf()
-                    buf[:] = self.prefix_buffer
-                    audio_frame.unlock_buf(buf)
-                    await ten_env.send_audio_frame(audio_frame)
-                    self.prefix_buffer.clear()
+                if self.config.output_speaking_only:
+                    if len(self.prefix_buffer) > 0:
+                        # Get the buffered audio and clear the buffer
+                        prefix_buffer = bytes(self.prefix_buffer)  # Make a copy
+                        self.prefix_buffer = bytearray()
+                        ten_env.log_debug(
+                            f"Sending prefix buffer with {len(prefix_buffer)} bytes"
+                        )
+                        await self._send_audio_frame(ten_env, prefix_buffer)
+                    else:
+                        ten_env.log_debug("Prefix buffer is empty")
 
         elif self.state == VADState.SPEAKING:
             # Check if we should transition to IDLE
@@ -143,7 +145,36 @@ class TENVADPythonExtension(AsyncExtension):
 
                 # send end_of_speaking cmd
                 ten_env.log_debug("send_cmd: end_of_speaking")
-                await ten_env.send_cmd(Cmd.create("end_of_speaking"))
+                await asyncio.create_task(
+                    ten_env.send_cmd(Cmd.create("end_of_speaking"))
+                )
+
+    async def _send_audio_frame(self, ten_env: AsyncTenEnv, audio_data: bytes) -> None:
+        """Helper function to create and send an audio frame with given data."""
+
+        # Dump output audio if needed
+        self._dump_audio_if_needed(audio_data, "out")
+
+        audio_frame = AudioFrame.create("pcm_frame")
+        audio_frame.set_bytes_per_sample(BYTES_PER_SAMPLE)
+        audio_frame.set_sample_rate(SAMPLE_RATE)
+        audio_frame.set_number_of_channels(1)
+        audio_frame.set_data_fmt(AudioFrameDataFmt.INTERLEAVE)
+        audio_frame.set_samples_per_channel(len(audio_data) // BYTES_PER_SAMPLE)
+        audio_frame.alloc_buf(len(audio_data))
+        buf = audio_frame.lock_buf()
+        buf[:] = audio_data
+        audio_frame.unlock_buf(buf)
+        await ten_env.send_audio_frame(audio_frame)
+        # ten_env.log_debug(f"sent audio frame with {len(audio_data)} bytes")
+
+    def _dump_audio_if_needed(self, buf: bytearray, suffix: str) -> None:
+        if not self.config.dump:
+            return
+
+        dump_file = os.path.join(self.config.dump_path, f"{self.name}_{suffix}.pcm")
+        with open(dump_file, "ab") as f:
+            f.write(buf)
 
     async def on_audio_frame(
         self, ten_env: AsyncTenEnv, audio_frame: AudioFrame
@@ -154,12 +185,12 @@ class TENVADPythonExtension(AsyncExtension):
         # Handle audio frame based on mode
         if not self.config.output_speaking_only:
             # Direct passthrough mode
-            await ten_env.send_audio_frame(audio_frame)
+            await self._send_audio_frame(ten_env, frame_buf)
         else:
             # Speaking only mode
             if self.state == VADState.SPEAKING:
                 # In speaking state, directly output the frame
-                await ten_env.send_audio_frame(audio_frame)
+                await self._send_audio_frame(ten_env, frame_buf)
             else:
                 # In idle state, buffer the audio data for potential prefix
                 self.prefix_buffer.extend(frame_buf)
@@ -187,11 +218,3 @@ class TENVADPythonExtension(AsyncExtension):
 
         # Check state transition
         await self._check_state_transition(ten_env)
-
-    def _dump_audio_if_needed(self, buf: bytearray, suffix: str) -> None:
-        if not self.config.dump:
-            return
-
-        dump_file = os.path.join(self.config.dump_path, f"{self.name}_{suffix}.pcm")
-        with open(dump_file, "ab") as f:
-            f.write(buf)
