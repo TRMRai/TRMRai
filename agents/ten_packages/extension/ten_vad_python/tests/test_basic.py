@@ -76,7 +76,7 @@ def test_basic():
         "prefix_padding_ms": 200,
         "silence_duration_ms": 1000,
         "vad_threshold": 0.5,
-        "hop_size": 160,
+        "hop_size_ms": 20,
         "dump": False,
         "dump_path": "",
     }
