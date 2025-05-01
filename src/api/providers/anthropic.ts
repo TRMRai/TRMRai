@@ -211,7 +211,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 // retrieve from the cache for the current request.
 //
 // The system message will always have a cache breakpoint set.
-const addCacheBreakpoints = (messages: Anthropic.Messages.MessageParam[]) => {
+const addCacheBreakpoints = (messages: Anthropic.Messages.MessageParam[]): void => {
 	let userMessagesFound = 0
 
 	for (let i = messages.length - 1; i >= 0; i--) {
