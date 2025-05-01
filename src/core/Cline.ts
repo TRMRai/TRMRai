@@ -1433,7 +1433,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 			)
 		})()
 
-		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
+		// If the previous API request's total token usage is close to the
+		// context window, truncate the conversation history to free up space
+		// for the new request.
 		if (previousApiReqIndex >= 0) {
 			const previousRequest = this.clineMessages[previousApiReqIndex]?.text
 
@@ -1450,7 +1452,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
 
-			// Default max tokens value for thinking models when no specific value is set
+			// Default max tokens value for thinking models when no specific
+			// value is set.
 			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
 
 			const modelInfo = this.api.getModel().info
@@ -1584,9 +1587,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// no error, so we can continue to yield all remaining chunks
-		// (needs to be placed outside of try/catch since it we want caller to handle errors not with api_req_failed as that is reserved for first chunk failures only)
-		// this delegates to another generator or iterable object. In this case, it's saying "yield all remaining values from this iterator". This effectively passes along all subsequent chunks from the original stream.
+		// No error, so we can continue to yield all remaining chunks.
+		// (Needs to be placed outside of try/catch since it we want caller to
+		// handle errors not with api_req_failed as that is reserved for first
+		// chunk failures only.)
+		// This delegates to another generator or iterable object. In this case,
+		// it's saying "yield all remaining values from this iterator". This
+		// effectively passes along all subsequent chunks from the original
+		// stream.
 		yield* iterator
 	}
 
