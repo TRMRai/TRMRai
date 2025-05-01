@@ -47,7 +47,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			case "claude-3-opus-20240229":
 			case "claude-3-haiku-20240307": {
 				system = [{ text: systemPrompt, type: "text", cache_control: { type: "ephemeral" } }]
-				messages = addCacheBreakpoints(messages)
+				addCacheBreakpoints(messages)
 				requestOptions =
 					virtualId === "claude-3-7-sonnet-20250219:thinking"
 						? { headers: { "anthropic-beta": ["output-128k-2025-02-19"] } }
@@ -212,29 +212,41 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 //
 // The system message will always have a cache breakpoint set.
 const addCacheBreakpoints = (messages: Anthropic.Messages.MessageParam[]) => {
-	const indices = messages.reduce((acc, { role }, index) => (role === "user" ? [...acc, index] : acc), [] as number[])
-	const lastIndex = indices[indices.length - 1] ?? -1
-	const secondLastIndex = indices[indices.length - 2] ?? -1
+	let userMessagesFound = 0
 
-	return messages.map((message, index) =>
-		index === lastIndex || index === secondLastIndex
-			? {
-					...message,
-					content:
-						typeof message.content === "string"
-							? [
-									{
-										type: "text" as const,
-										text: message.content,
-										cache_control: { type: "ephemeral" as const },
-									},
-								]
-							: message.content.map((content, contentIndex) =>
-									contentIndex === message.content.length - 1
-										? { ...content, cache_control: { type: "ephemeral" as const } }
-										: content,
-								),
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const msg = messages[i]
+
+		if (msg.role !== "user") {
+			continue
+		}
+
+		if (typeof msg.content === "string") {
+			msg.content = [{ type: "text" as const, text: msg.content, cache_control: { type: "ephemeral" as const } }]
+		} else if (Array.isArray(msg.content)) {
+			let lastTextPart: TextBlockParam | undefined
+
+			for (let j = msg.content.length - 1; j >= 0; j--) {
+				const part = msg.content[j]
+
+				if (part.type === "text") {
+					lastTextPart = part
+					break
 				}
-			: message,
-	)
+			}
+
+			if (lastTextPart) {
+				lastTextPart.cache_control = { type: "ephemeral" as const }
+			} else {
+				msg.content.push({ type: "text" as const, text: "...", cache_control: { type: "ephemeral" as const } })
+			}
+		}
+
+		userMessagesFound++
+
+		// Stop after finding and modifying the last two user messages.
+		if (userMessagesFound === 2) {
+			break
+		}
+	}
 }
