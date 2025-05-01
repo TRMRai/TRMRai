@@ -38,7 +38,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
 
 		let system: TextBlockParam[]
-		let requestOptions: any = undefined
+		let requestOptions: object | undefined = undefined
 
 		switch (modelId) {
 			case "claude-3-7-sonnet-20250219":
