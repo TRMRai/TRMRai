@@ -11,7 +11,9 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 	} catch (error) {
 		throw new Error(`File not found: ${filePath}`)
 	}
+
 	const fileExtension = path.extname(filePath).toLowerCase()
+
 	switch (fileExtension) {
 		case ".pdf":
 			return extractTextFromPDF(filePath)
@@ -21,6 +23,7 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 			return extractTextFromIPYNB(filePath)
 		default:
 			const isBinary = await isBinaryFile(filePath).catch(() => false)
+
 			if (!isBinary) {
 				return addLineNumbers(await fs.readFile(filePath, "utf8"))
 			} else {
@@ -65,11 +68,13 @@ export function addLineNumbers(content: string, startLine: number = 1): string {
 	// Split into lines and handle trailing line feeds (\n)
 	const lines = content.split("\n")
 	const lastLineEmpty = lines[lines.length - 1] === ""
+
 	if (lastLineEmpty) {
 		lines.pop()
 	}
 
 	const maxLineNumberWidth = String(startLine + lines.length - 1).length
+
 	const numberedContent = lines
 		.map((line, index) => {
 			const lineNumber = String(startLine + index).padStart(maxLineNumberWidth, " ")
@@ -79,6 +84,7 @@ export function addLineNumbers(content: string, startLine: number = 1): string {
 
 	return numberedContent + "\n"
 }
+
 // Checks if every line in the content has line numbers prefixed (e.g., "1 | content" or "123 | content")
 // Line numbers must be followed by a single pipe character (not double pipes)
 export function everyLineHasLineNumbers(content: string): boolean {

@@ -2,17 +2,22 @@ import path from "path"
 import { isBinaryFile } from "isbinaryfile"
 
 import { Cline } from "../Cline"
+
 import { ClineSayTool } from "../../shared/ExtensionMessage"
-import { formatResponse } from "../prompts/responses"
-import { t } from "../../i18n"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
-import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
+
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { getReadablePath } from "../../utils/path"
+
 import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
+
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
+
+import { formatResponse } from "../prompts/responses"
+import { t } from "../../i18n"
+import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 
 export async function readFileTool(
 	cline: Cline,
@@ -35,9 +40,10 @@ export async function readFileTool(
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
 		isOutsideWorkspace,
 	}
+
 	try {
 		if (block.partial) {
-			const partialMessage = JSON.stringify({ ...sharedMessageProps, content: undefined } satisfies ClineSayTool)
+			const partialMessage = JSON.stringify({ ...sharedMessageProps, content: undefined })
 			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
 			return
 		} else {
@@ -49,7 +55,8 @@ export async function readFileTool(
 				return
 			}
 
-			const { maxReadFileLine = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
+			const provider = cline.providerRef.deref()
+			const { maxReadFileLine = 500 } = (await provider?.getState()) ?? {}
 			const isFullRead = maxReadFileLine === -1
 
 			// Check if we're doing a line range read
@@ -128,7 +135,7 @@ export async function readFileTool(
 				...sharedMessageProps,
 				content: absolutePath,
 				reason: lineSnippet,
-			} satisfies ClineSayTool)
+			})
 
 			const didApprove = await askApproval("tool", completeMessage)
 
@@ -136,7 +143,6 @@ export async function readFileTool(
 				return
 			}
 
-			// Count total lines in the file
 			let totalLines = 0
 
 			try {
@@ -145,7 +151,7 @@ export async function readFileTool(
 				console.error(`Error counting lines in file ${absolutePath}:`, error)
 			}
 
-			// now execute the tool like normal
+			// Now execute the tool like normal
 			let content: string
 			let isFileTruncated = false
 			let sourceCodeDef = ""
@@ -159,7 +165,7 @@ export async function readFileTool(
 					content = addLineNumbers(await readLines(absolutePath, endLine, startLine), startLine + 1)
 				}
 			} else if (!isBinary && maxReadFileLine >= 0 && totalLines > maxReadFileLine) {
-				// If file is too large, only read the first maxReadFileLine lines
+				// If file is too large, only read the first maxReadFileLine lines.
 				isFileTruncated = true
 
 				const res = await Promise.all([
@@ -174,39 +180,37 @@ export async function readFileTool(
 					sourceCodeDef = `${result}`
 				}
 			} else {
-				// Read entire file
 				content = await extractTextFromFile(absolutePath)
 			}
 
-			// Create variables to store XML components
+			// Create variables to store XML components.
 			let xmlInfo = ""
 			let contentTag = ""
 
-			// Add truncation notice if applicable
+			// Add truncation notice if applicable.
 			if (isFileTruncated) {
 				xmlInfo += `<notice>Showing only ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more</notice>\n`
 
-				// Add source code definitions if available
+				// Add source code definitions if available.
 				if (sourceCodeDef) {
 					xmlInfo += `<list_code_definition_names>${sourceCodeDef}</list_code_definition_names>\n`
 				}
 			}
 
-			// Empty files (zero lines)
+			// Empty files (zero lines).
 			if (content === "" && totalLines === 0) {
-				// Always add self-closing content tag and notice for empty files
+				// Always add self-closing content tag and notice for empty files.
 				contentTag = `<content/>`
 				xmlInfo += `<notice>File is empty</notice>\n`
 			}
-			// Range reads should always show content regardless of maxReadFileLine
+			// Range reads should always show content regardless of maxReadFileLine.
 			else if (isRangeRead) {
-				// Create content tag with line range information
+				// Create content tag with line range information.
 				let lineRangeAttr = ""
 				const displayStartLine = startLine !== undefined ? startLine + 1 : 1
 				const displayEndLine = endLine !== undefined ? endLine + 1 : totalLines
 				lineRangeAttr = ` lines="${displayStartLine}-${displayEndLine}"`
-
-				// Maintain exact format expected by tests
+				// Maintain exact format expected by tests.
 				contentTag = `<content${lineRangeAttr}>\n${content}</content>\n`
 			}
 			// maxReadFileLine=0 for non-range reads

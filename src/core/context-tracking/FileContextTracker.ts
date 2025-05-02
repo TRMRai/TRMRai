@@ -1,12 +1,15 @@
 import * as path from "path"
+import fs from "fs/promises"
+
 import * as vscode from "vscode"
+
 import { getTaskDirectoryPath } from "../../shared/storagePathManager"
 import { GlobalFileNames } from "../../shared/globalFileNames"
+
 import { fileExistsAtPath } from "../../utils/fs"
-import fs from "fs/promises"
 import { ContextProxy } from "../config/ContextProxy"
-import type { FileMetadataEntry, RecordSource, TaskMetadata } from "./FileContextTrackerTypes"
 import { ClineProvider } from "../webview/ClineProvider"
+import type { FileMetadataEntry, RecordSource, TaskMetadata } from "./FileContextTrackerTypes"
 
 // This class is responsible for tracking file operations that may result in stale context.
 // If a user modifies a file outside of Roo, the context may become stale and need to be updated.
@@ -37,9 +40,11 @@ export class FileContextTracker {
 	// Gets the current working directory or returns undefined if it cannot be determined
 	private getCwd(): string | undefined {
 		const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+
 		if (!cwd) {
 			console.info("No workspace folder available - cannot determine current working directory")
 		}
+
 		return cwd
 	}
 
@@ -51,6 +56,7 @@ export class FileContextTracker {
 		}
 
 		const cwd = this.getCwd()
+
 		if (!cwd) {
 			return
 		}
@@ -95,18 +101,13 @@ export class FileContextTracker {
 
 	public getContextProxy(): ContextProxy | undefined {
 		const provider = this.providerRef.deref()
+
 		if (!provider) {
 			console.error("ClineProvider reference is no longer valid")
 			return undefined
 		}
-		const context = provider.contextProxy
 
-		if (!context) {
-			console.error("Context is not available")
-			return undefined
-		}
-
-		return context
+		return provider.contextProxy
 	}
 
 	// Gets task metadata from storage
@@ -114,6 +115,7 @@ export class FileContextTracker {
 		const globalStoragePath = this.getContextProxy()?.globalStorageUri.fsPath ?? ""
 		const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 		const filePath = path.join(taskDir, GlobalFileNames.taskMetadata)
+
 		try {
 			if (await fileExistsAtPath(filePath)) {
 				return JSON.parse(await fs.readFile(filePath, "utf8"))
@@ -121,6 +123,7 @@ export class FileContextTracker {
 		} catch (error) {
 			console.error("Failed to read task metadata:", error)
 		}
+
 		return { files_in_context: [] }
 	}
 
@@ -220,6 +223,7 @@ export class FileContextTracker {
 		for (const watcher of this.fileWatchers.values()) {
 			watcher.dispose()
 		}
+
 		this.fileWatchers.clear()
 	}
 }
