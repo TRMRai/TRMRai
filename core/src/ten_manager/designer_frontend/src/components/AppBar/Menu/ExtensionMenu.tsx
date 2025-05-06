@@ -5,7 +5,7 @@
 // Refer to the "LICENSE" file in the root directory for more information.
 //
 import { useTranslation } from "react-i18next";
-import { BlocksIcon, InfoIcon } from "lucide-react";
+import { BlocksIcon, InfoIcon, PodcastIcon } from "lucide-react";
 
 import {
   NavigationMenuContent,
@@ -27,10 +27,16 @@ import {
   EXTENSION_STORE_WIDGET_ID,
   DOC_REF_WIDGET_ID,
   GROUP_DOC_REF_ID,
+  RTC_INTERACTION_WIDGET_ID,
 } from "@/constants/widgets";
 import { EDocLinkKey } from "@/types/doc";
 import { ExtensionStorePopupTitle } from "@/components/Popup/Default/Extension";
 import { DocRefPopupTitle } from "@/components/Popup/Default/DocRef";
+
+export const RTCInteractionPopupTitle = () => {
+  const { t } = useTranslation();
+  return t("rtcInteraction.title");
+};
 
 export const ExtensionMenu = (props: {
   disableMenuClick?: boolean;
@@ -62,6 +68,27 @@ export const ExtensionMenu = (props: {
       },
     });
   };
+
+  const onStartRTCInteraction = () => {
+    appendWidgetIfNotExists({
+      container_id: CONTAINER_DEFAULT_ID,
+      group_id: RTC_INTERACTION_WIDGET_ID,
+      widget_id: RTC_INTERACTION_WIDGET_ID,
+
+      category: EWidgetCategory.Default,
+      display_type: EWidgetDisplayType.Popup,
+
+      title: <RTCInteractionPopupTitle />,
+      metadata: {
+        type: EDefaultWidgetType.RTCInteraction,
+      },
+      popup: {
+        width: 640,
+        height: 480,
+        initialPosition: "top-left",
+      },
+    });
+  }
 
   const openAbout = () => {
     appendWidgetIfNotExists({
@@ -113,6 +140,16 @@ export const ExtensionMenu = (props: {
           >
             <BlocksIcon />
             {t("header.menuExtension.openExtensionStore")}
+          </Button>
+        </NavigationMenuLink>
+        <NavigationMenuLink asChild>
+          <Button
+            className="w-full justify-start"
+            variant="ghost"
+            onClick={onStartRTCInteraction}
+          >
+            <PodcastIcon />
+            {t("header.menuExtension.startRTCInteraction")}
           </Button>
         </NavigationMenuLink>
         <Separator className="w-full" />

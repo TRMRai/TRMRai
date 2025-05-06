@@ -50,6 +50,7 @@
     "menuExtension": {
       "title": "擴充功能",
       "openExtensionStore": "開啟擴充功能商店",
+      "startRTCInteraction": "開始 RTC 互動",
       "about": "關於擴充功能"
     },
     "language": {
@@ -262,6 +263,9 @@
     "selectVersion": "選擇版本",
     "versionLatest": "最新",
     "localAddonTip": "(本地)"
+  },
+  "rtcInteraction": {
+    "title": "RTC 互動"
   },
   "statusBar": {
     "appsLoadedWithCount": "已載入 {{count}} 個應用程式",

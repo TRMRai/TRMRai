@@ -50,6 +50,7 @@
     "menuExtension": {
       "title": "Extensions",
       "openExtensionStore": "Open Extension Store",
+      "startRTCInteraction": "Start RTC Interaction",
       "about": "About Extensions"
     },
     "language": {
@@ -262,6 +263,9 @@
     "selectVersion": "Select a version",
     "versionLatest": "Latest",
     "localAddonTip": "(local)"
+  },
+  "rtcInteraction": {
+    "title": "RTC Interaction"
   },
   "statusBar": {
     "appsLoadedWithCount": "{{count}} app(s) loaded",

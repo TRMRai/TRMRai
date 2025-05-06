@@ -22,6 +22,8 @@ export const PREFERENCES_WIDGET_ID = WIDGET_ID_PREFIX + "preferences";
 
 export const GRAPH_ACTIONS_WIDGET_ID = WIDGET_ID_PREFIX + "graph-actions";
 
+export const RTC_INTERACTION_WIDGET_ID = WIDGET_ID_PREFIX + "rtc-interaction";
+
 // --- group ids ---
 // export const GROUP_DEFAULT_ID = "group-default";
 export const GROUP_ABOUT_ID = "group-about";

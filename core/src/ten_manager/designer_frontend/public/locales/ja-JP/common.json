@@ -50,6 +50,7 @@
     "menuExtension": {
       "title": "拡張機能",
       "openExtensionStore": "拡張機能ストアを開く",
+      "startRTCInteraction": "RTCインタラクションを開始",
       "about": "拡張機能について"
     },
     "language": {
@@ -262,6 +263,9 @@
     "selectVersion": "バージョンを選択",
     "versionLatest": "最新",
     "localAddonTip": "(ローカル)"
+  },
+  "rtcInteraction": {
+    "title": "RTCインタラクション"
   },
   "statusBar": {
     "appsLoadedWithCount": "{{count}}個のアプリが読み込まれています",
