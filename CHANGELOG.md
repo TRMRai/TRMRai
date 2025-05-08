@@ -1,8 +1,6 @@
 # Roo Code Changelog
 
-## 3.16.2
-
-### Patch Changes
+## [3.16.2]
 
 -   - Clarify XML tool use formatting instructions
 
