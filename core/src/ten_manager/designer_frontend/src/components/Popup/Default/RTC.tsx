@@ -5,7 +5,7 @@
 // Refer to the "LICENSE" file in the root directory for more information.
 //
 import { useTranslation } from "react-i18next";
-import AgoraRTC from "agora-rtc-react";
+import AgoraRTC, { LocalVideoTrack, useLocalScreenTrack } from "agora-rtc-react";
 import {
   AgoraRTCProvider,
   LocalUser,
@@ -25,6 +25,9 @@ import { useRTCEnvVar } from "@/api/services/env-var";
 import React from "react";
 import { toast } from "sonner";
 import { useFlowStore } from "@/store";
+import AgentView from "@/components/Agent";
+import MicrophoneBlock from "@/components/Agent/Microphone";
+import VideoBlock, { VideoSourceType } from "@/components/Agent/Camera";
 
 const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
@@ -55,7 +58,7 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
       const property = rtcNode.data.property;
       if (property) {
         const propChannel = (property["channel"] || "") as string;
-        const propUid = (property["remote_stream_id"] || 1000) as number;
+        const propUid = (property["remote_stream_id"]) as (number | null);
         setChannel(propChannel);
         setUid(propUid);
       }
@@ -65,7 +68,7 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
   useEffect(() => {
     if (!appId || !channel || uid === null) return;
     let token = appId;
-    
+
     if (appCert) {
       token = RtcTokenBuilder.buildTokenWithUserAccount(
         appId,
@@ -79,7 +82,7 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
     }
     setToken(token);
     setReady(true);
-    
+
     return () => { };
   }, [channel, appId, appCert, uid]);
 
@@ -93,31 +96,45 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
     ready
   );
   //local user
-  const [micOn, setMic] = useState(true);
-  const [cameraOn, setCamera] = useState(true);
+  const [micOn, setMicOn] = useState(true);
+  const [videoOn, setVideoOn] = useState(true);
+  const [videoSourceType, setVideoSourceType] = useState<VideoSourceType>(VideoSourceType.CAMERA);
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn);
-  const { localCameraTrack } = useLocalCameraTrack(cameraOn);
-  usePublish([localMicrophoneTrack, localCameraTrack]);
-  //remote users
-  const remoteUsers = useRemoteUsers();
+  const { localCameraTrack } = useLocalCameraTrack(videoSourceType === VideoSourceType.CAMERA ? videoOn : false);
+  const { screenTrack } = useLocalScreenTrack(
+    videoSourceType === VideoSourceType.SCREEN ? videoOn : false,
+    {},
+    "disable" // withAudio: "enable" | "disable"
+  );
+
+  const setMic = async (value: boolean) => {
+    if (localMicrophoneTrack) {
+      await localMicrophoneTrack.setMuted(!value);
+      setMicOn(value);
+    }
+  }
+
+  const setVideo = async (value: boolean) => {
+    if (localCameraTrack) {
+      await localCameraTrack.setMuted(!value);
+    }
+    if (screenTrack) {
+      await screenTrack.setMuted(!value);
+    }
+    setVideoOn(value);
+  }
+
+  const setVideoSource = async (value: VideoSourceType) => {
+    setVideoSourceType(value);
+  }
+
+  usePublish([localMicrophoneTrack, localCameraTrack, screenTrack]);
 
   return (
-    <div className="flex flex-col gap-2 h-full w-full">
-      <LocalUser
-        cameraOn={cameraOn}
-        micOn={micOn}
-        videoTrack={localCameraTrack}
-        cover="https://www.agora.io/en/wp-content/uploads/2022/10/3d-spatial-audio-icon.svg"
-      >
-        <samp className="user-name">You</samp>
-      </LocalUser>
-      {remoteUsers.map((user) => (
-        <div className="user" key={user.uid}>
-          <RemoteUser cover="https://www.agora.io/en/wp-content/uploads/2022/10/3d-spatial-audio-icon.svg" user={user}>
-            <samp className="user-name">{user.uid}</samp>
-          </RemoteUser>
-        </div>
-      ))}
+    <div className="flex flex-col h-full w-full">
+      <AgentView />
+      <MicrophoneBlock audioTrack={localMicrophoneTrack} micOn={micOn} setMicOn={setMic} />
+      <VideoBlock videoTrack={videoSourceType === VideoSourceType.CAMERA ? localCameraTrack : screenTrack} videoOn={videoOn} setVideoOn={setVideo} videoSourceType={videoSourceType} onVideoSourceChange={setVideoSource} />
     </div>
   );
 };
