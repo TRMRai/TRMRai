@@ -2,7 +2,7 @@
   "_ten": {
     "predefined_graphs": [
       {
-        "name": "with_ten_turn_detector",
+        "name": "with_ten_turn_detection",
         "auto_start": true,
         "nodes": [
           {
@@ -209,7 +209,7 @@
         ]
       },
       {
-        "name": "without_ten_turn_detector",
+        "name": "without_ten_turn_detection_and_ten_vad",
         "auto_start": true,
         "nodes": [
           {
@@ -416,7 +416,7 @@
         ]
       },
       {
-        "name": "ten_turn_detector_and_ten_vad",
+        "name": "with_ten_turn_detection_and_ten_vad",
         "auto_start": false,
         "nodes": [
           {
