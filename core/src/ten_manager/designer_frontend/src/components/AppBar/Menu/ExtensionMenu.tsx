@@ -70,7 +70,7 @@ export const ExtensionMenu = (props: {
   };
 
   const onStartRTCInteraction = () => {
-    appendWidgetIfNotExists({
+    appendWidget({
       container_id: CONTAINER_DEFAULT_ID,
       group_id: RTC_INTERACTION_WIDGET_ID,
       widget_id: RTC_INTERACTION_WIDGET_ID,
@@ -88,7 +88,7 @@ export const ExtensionMenu = (props: {
         initialPosition: "top-left",
       },
     });
-  }
+  };
 
   const openAbout = () => {
     appendWidget({

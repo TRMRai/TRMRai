@@ -39,9 +39,9 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
   const isConnected = useIsConnected();
   const { value, error, isLoading } = useRTCEnvVar();
   const { appId, appCert } = value || {};
-  const [channel, setChannel] = useState("test");
+  const [channel, setChannel] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [uid, setUid] = useState<number>(1000);
+  const [uid, setUid] = useState<number | null>(null);
 
   React.useEffect(() => {
     if (error) {
@@ -54,33 +54,39 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
     if (rtcNode) {
       const property = rtcNode.data.property;
       if (property) {
-        setChannel((property["channel"] || "") as string);
-        setUid((property["uid"] || 1000) as number);
+        const propChannel = (property["channel"] || "") as string;
+        const propUid = (property["remote_stream_id"] || 1000) as number;
+        setChannel(propChannel);
+        setUid(propUid);
       }
     }
   }, [nodes]);
 
   useEffect(() => {
-    if (!appId || !channel || isLoading) return;
-    const token = RtcTokenBuilder.buildTokenWithUserAccount(
-      appId,
-      appCert || "",
-      channel,
-      0,
-      1,
-      Math.floor(Date.now() / 1000) + 3600, // 1 hour expiration
-      Math.floor(Date.now() / 1000) + 3600  // 1 hour expiration
-    );
+    if (!appId || !channel || uid === null) return;
+    let token = appId;
+    
+    if (appCert) {
+      token = RtcTokenBuilder.buildTokenWithUserAccount(
+        appId,
+        appCert || "",
+        channel,
+        uid,
+        1,
+        Math.floor(Date.now() / 1000) + 3600, // 1 hour expiration
+        Math.floor(Date.now() / 1000) + 3600  // 1 hour expiration
+      );
+    }
     setToken(token);
     setReady(true);
     
     return () => { };
-  }, [channel, appId, appCert, isLoading]);
+  }, [channel, appId, appCert, uid]);
 
   useJoin(
     {
       appid: appId || "",
-      channel: channel,
+      channel: channel || "",
       token: token ? token : null,
       uid: uid
     },
