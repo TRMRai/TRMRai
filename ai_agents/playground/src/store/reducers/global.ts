@@ -57,15 +57,7 @@ const getInitialState = (): InitialState => {
     voiceType: "male",
     chatItems: [],
     selectedGraphId: "",
-    graphList: [
-      {
-        uuid: "huggingface",
-        name: "agent_huggingface",
-        autoStart: true,
-        nodes: [],
-        connections: [],
-      }
-    ],
+    graphList: [],
     graphMap: {},
     addonModules: [],
     mobileActiveTab: EMobileActiveTab.AGENT,
