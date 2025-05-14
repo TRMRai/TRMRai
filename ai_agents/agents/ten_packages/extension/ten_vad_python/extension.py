@@ -64,7 +64,7 @@ class TENVADPythonExtension(AsyncExtension):
             self.config.prefix_padding_ms // self.config.hop_size_ms
         )
         self.window_size = max(self.silence_window_size, self.prefix_window_size)
-        ten_env.log_debug(
+        ten_env.log_info(
             f"window_size: {self.window_size}, prefix_window_size: {self.prefix_window_size}, silence_window_size: {self.silence_window_size}"
         )
 
@@ -102,11 +102,11 @@ class TENVADPythonExtension(AsyncExtension):
             )
             if all_above_threshold:
                 self.state = VADState.SPEAKING
-                ten_env.log_debug(f"State transition: IDLE -> SPEAKING")
+                ten_env.log_info(f"State transition: IDLE -> SPEAKING")
                 ten_env.log_debug(f"(probes: {prefix_probes})")
 
                 # send start_of_sentence cmd
-                ten_env.log_debug("send_cmd: start_of_sentence")
+                ten_env.log_info("send_cmd: start_of_sentence")
                 await asyncio.create_task(
                     ten_env.send_cmd(Cmd.create("start_of_sentence"))
                 )
@@ -120,11 +120,11 @@ class TENVADPythonExtension(AsyncExtension):
             )
             if all_below_threshold:
                 self.state = VADState.IDLE
-                ten_env.log_debug(f"State transition: SPEAKING -> IDLE")
+                ten_env.log_info(f"State transition: SPEAKING -> IDLE")
                 ten_env.log_debug(f"(probes: {silence_probes})")
 
                 # send end_of_sentence cmd
-                ten_env.log_debug("send_cmd: end_of_sentence")
+                ten_env.log_info("send_cmd: end_of_sentence")
                 await asyncio.create_task(
                     ten_env.send_cmd(Cmd.create("end_of_sentence"))
                 )
