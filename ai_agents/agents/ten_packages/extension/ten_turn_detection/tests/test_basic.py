@@ -50,5 +50,5 @@ class ExtensionTesterBasic(ExtensionTester):
 
 def test_basic():
     tester = ExtensionTesterBasic()
-    tester.set_test_mode_single("ten_turn_detector")
+    tester.set_test_mode_single("ten_turn_detection")
     tester.run()

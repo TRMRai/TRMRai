@@ -1,4 +1,4 @@
-# ten_turn_detector
+# ten_turn_detection
 
 <!-- brief introduction for the extension -->
 

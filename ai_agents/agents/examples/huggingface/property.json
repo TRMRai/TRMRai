@@ -58,7 +58,7 @@
           {
             "type": "extension",
             "name": "interrupt_detector",
-            "addon": "ten_turn_detector",
+            "addon": "ten_turn_detection",
             "extension_group": "default",
             "property": {}
           },
@@ -472,7 +472,7 @@
           {
             "type": "extension",
             "name": "interrupt_detector",
-            "addon": "ten_turn_detector",
+            "addon": "ten_turn_detection",
             "extension_group": "default",
             "property": {}
           },

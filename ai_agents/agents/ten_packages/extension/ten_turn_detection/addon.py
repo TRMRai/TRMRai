@@ -11,7 +11,7 @@ from ten import (
 from .extension import TENTurnDetectorExtension
 
 
-@register_addon_as_extension("ten_turn_detector")
+@register_addon_as_extension("ten_turn_detection")
 class TENTurnDetectorExtensionAddon(Addon):
     def on_create_instance(self, ten_env: TenEnv, name: str, context) -> None:
         ten_env.log_info("on_create_instance")
