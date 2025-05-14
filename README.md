@@ -386,7 +386,9 @@ Read the [Deployment Guide](https://theten.ai/docs/ten_agent/deploy_ten_agent/de
 
 | Project | Preview |
 | ------- | ------- |
-| [**🏚️ TEN Framework**][ten-framework-link]<br>TEN, a AI agent framework to create various AI agents which supports real-time conversation.<br><br>![][ten-framework-shield] | ![][ten-framework-banner] |
+| [**🏚️ TEN Framework**][ten-framework-link]<br>TEN is an open-source framework for real-time, multimodal conversational AI.<br><br>![][ten-framework-shield] | ![][ten-framework-banner] |
+| [**⏎ TEN Turn Detection**][ten-turn-detection-link]<br>TEN is an open-source framework for real-time, multimodal conversational AI.<br><br>![][ten-turn-detection-shield] | ![][ten-turn-detection-banner] |
+| [**🗣️ TEN VAD**][ten-vad-link]<br>TEN is an open-source framework for real-time, multimodal conversational AI.<br><br>![][ten-vad-shield] | ![][ten-vad-banner] |
 | [**🎙️ TEN Agent**][ten-agent-link]<br>TEN Agent is a showcase of TEN Framewrok.<br><br> | ![][ten-agent-banner] |
 | **🎨 TMAN Designer** `beta`<br>TMAN Designer is low/no code option to make a voice agent with easy to use workflow UI.<br><br> | ![][tman-designer-banner] |
 | **📒 TEN Portal**<br>The official site of TEN framework, it has documentation and blog.<br><br>![][ten-docs-shield] | ![][ten-docs-banner] |
