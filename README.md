@@ -3,8 +3,9 @@
 ![TEN Agent banner](https://ten-framework-assets.s3.us-east-1.amazonaws.com/ten-banner.jpg)
 
 ![]( https://img.shields.io/github/v/release/ten-framework/ten-framework?color=369eff&labelColor=gray&logo=github&style=flat-square )
+![](https://img.shields.io/github/release-date/ten-framework/ten-framework?labelColor=gray&style=flat-square)
 [![Discussion posts](https://img.shields.io/github/discussions/TEN-framework/ten_framework?labelColor=gray&color=%20%23f79009)](https://github.com/TEN-framework/ten-framework/discussions/)
-[![Commits](https://img.shields.io/github/commit-activity/m/TEN-framework/ten_framework?labelColor=gray&color=%20%235d6b98)](https://github.com/TEN-framework/ten-framework/graphs/commit-activity)
+[![Commits](https://img.shields.io/github/commit-activity/m/TEN-framework/ten_framework?labelColor=gray&color=pink)](https://github.com/TEN-framework/ten-framework/graphs/commit-activity)
 [![Issues closed](https://img.shields.io/github/issues-search?query=repo%3ATEN-framework%2Ften-framework%20is%3Aclosed&label=issues%20closed&labelColor=gray&color=green)](https://github.com/TEN-framework/ten-framework/issues)
 ![](https://img.shields.io/github/contributors/ten-framework/ten-framework?color=c4f042&labelColor=gray&style=flat-square)
 ![](https://img.shields.io/badge/license-apache%202.0-blue?labelColor=gray&style=flat-square)
@@ -134,7 +135,7 @@ Check out [this blog](https://theten.ai/blog/tman-designer-of-ten-framework) for
 
 ## 🤖 TEN Agent
 
-![TEN Agent with Trulience](https://ten-framework-assets.s3.us-east-1.amazonaws.com/ten-trulience.gif)
+![TEN Agent with Trulience](https://github.com/user-attachments/assets/2f1dfd55-14a3-47ea-ae25-40ad40ceadea)
 
 ### 1️⃣ Real-time Avatar
 
@@ -150,6 +151,8 @@ Build engaging AI avatars with TEN Agent using [Trulience](https://trulience.com
 </div>
 
 <br>
+
+![TEN Agent with MCP servers](https://github.com/user-attachments/assets/934ba928-a4a3-4662-8624-cebefc88ce05)
 
 ### 2️⃣ Real-time voice with MCP servers
 
