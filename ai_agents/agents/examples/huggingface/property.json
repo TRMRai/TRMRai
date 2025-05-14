@@ -265,7 +265,7 @@
           {
             "type": "extension",
             "name": "interrupt_detector",
-            "addon": "interrupt_detector",
+            "addon": "interrupt_detector_python",
             "extension_group": "default",
             "property": {}
           },
