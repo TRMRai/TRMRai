@@ -58,7 +58,7 @@
           {
             "type": "extension",
             "name": "interrupt_detector",
-            "addon": "interrupt_detector_python",
+            "addon": "ten_turn_detector",
             "extension_group": "default",
             "property": {}
           },
