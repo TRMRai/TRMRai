@@ -3,9 +3,9 @@ from enum import Enum
 
 
 class TENTurnDetectorConfig(BaseModel):
-    base_url: str = "http://localhost:8001/v1"
-    api_key: str = "ten-turn-detector"
-    model: str = "ten-turn-detector"
+    base_url: str = "http://localhost:8000/v1"
+    api_key: str = "TEN_Turn_Detector"
+    model: str = "TEN_Turn_Detector"
     temperature: float = 0.1
     top_p: float = 0.1
 
