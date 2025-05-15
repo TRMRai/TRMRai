@@ -5,17 +5,18 @@
 // Refer to the "LICENSE" file in the root directory for more information.
 //
 import { useTranslation } from "react-i18next";
-import AgoraRTC, { LocalVideoTrack, useLocalScreenTrack } from "agora-rtc-react";
+import AgoraRTC from "agora-rtc-react";
+import { 
+  AgoraRTCScreenShareProvider, 
+  useLocalScreenTrack 
+} from "agora-rtc-react";
 import {
   AgoraRTCProvider,
-  LocalUser,
-  RemoteUser,
   useIsConnected,
   useJoin,
   useLocalCameraTrack,
   useLocalMicrophoneTrack,
   usePublish,
-  useRemoteUsers,
 } from "agora-rtc-react";
 
 import { IWidget } from "@/types/widgets";
@@ -26,21 +27,22 @@ import React from "react";
 import { toast } from "sonner";
 import { useFlowStore } from "@/store";
 import AgentView from "@/components/Agent";
-import MicrophoneBlock from "@/components/Agent/Microphone";
-import VideoBlock, { VideoSourceType } from "@/components/Agent/Camera";
+import MicrophoneBlock from "@/components/RTC/Microphone";
+import VideoBlock from "@/components/RTC/Camera";
+import { VideoSourceType } from "@/types/rtc";
 
 const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
 export const RTCWidgetTitle = () => {
   const { t } = useTranslation();
   return t("rtcInteraction.title");
-}
+};
 
-const RTCWidgetContentInner = ({ widget: IWidget }) => {
+const RTCWidgetContentInner = ({ widget }: { widget: IWidget }) => {
   const [ready, setReady] = useState(false);
   const { nodes } = useFlowStore();
   const isConnected = useIsConnected();
-  const { value, error, isLoading } = useRTCEnvVar();
+  const { value, error } = useRTCEnvVar();
   const { appId, appCert } = value || {};
   const [channel, setChannel] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -98,9 +100,13 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
   //local user
   const [micOn, setMicOn] = useState(true);
   const [videoOn, setVideoOn] = useState(true);
-  const [videoSourceType, setVideoSourceType] = useState<VideoSourceType>(VideoSourceType.CAMERA);
+  const [videoSourceType, setVideoSourceType] = useState<VideoSourceType>(
+    VideoSourceType.CAMERA
+  );
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn);
-  const { localCameraTrack } = useLocalCameraTrack(videoSourceType === VideoSourceType.CAMERA ? videoOn : false);
+  const { localCameraTrack } = useLocalCameraTrack(
+    videoSourceType === VideoSourceType.CAMERA ? videoOn : false
+  );
   const { screenTrack } = useLocalScreenTrack(
     videoSourceType === VideoSourceType.SCREEN ? videoOn : false,
     {},
@@ -112,29 +118,52 @@ const RTCWidgetContentInner = ({ widget: IWidget }) => {
       await localMicrophoneTrack.setMuted(!value);
       setMicOn(value);
     }
-  }
+  };
 
   const setVideo = async (value: boolean) => {
     if (localCameraTrack) {
       await localCameraTrack.setMuted(!value);
     }
     if (screenTrack) {
-      await screenTrack.setMuted(!value);
+      await screenTrack.close();
     }
     setVideoOn(value);
-  }
+  };
 
   const setVideoSource = async (value: VideoSourceType) => {
+    // If the video source type is changed, close the current track
+    if (value !== videoSourceType) {
+      if (screenTrack && videoSourceType === VideoSourceType.SCREEN) {
+        await screenTrack.close();
+      }
+    }
     setVideoSourceType(value);
-  }
+  };
 
-  usePublish([localMicrophoneTrack, localCameraTrack, screenTrack]);
+  const publishTracks = videoSourceType === VideoSourceType.CAMERA
+    ? [localMicrophoneTrack, localCameraTrack]
+    : [localMicrophoneTrack, screenTrack];
+
+  usePublish(publishTracks);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full gap-2">
       <AgentView />
-      <MicrophoneBlock audioTrack={localMicrophoneTrack} micOn={micOn} setMicOn={setMic} />
-      <VideoBlock videoTrack={videoSourceType === VideoSourceType.CAMERA ? localCameraTrack : screenTrack} videoOn={videoOn} setVideoOn={setVideo} videoSourceType={videoSourceType} onVideoSourceChange={setVideoSource} />
+      <MicrophoneBlock
+        audioTrack={localMicrophoneTrack}
+        micOn={micOn}
+        setMicOn={setMic}
+      />
+      <AgoraRTCScreenShareProvider client={client}>
+        <VideoBlock
+          cameraTrack={localCameraTrack}
+          screenTrack={screenTrack}
+          videoOn={videoOn}
+          setVideoOn={setVideo}
+          videoSourceType={videoSourceType}
+          onVideoSourceChange={setVideoSource}
+        />
+      </AgoraRTCScreenShareProvider>
     </div>
   );
 };

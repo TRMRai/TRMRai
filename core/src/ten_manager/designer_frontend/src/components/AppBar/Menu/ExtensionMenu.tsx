@@ -83,8 +83,8 @@ export const ExtensionMenu = (props: {
         type: EDefaultWidgetType.RTCInteraction,
       },
       popup: {
-        width: 320,
-        height: 420,
+        width: 450,
+        height: 520,
         initialPosition: "top-left",
       },
     });

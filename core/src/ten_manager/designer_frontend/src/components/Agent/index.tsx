@@ -1,39 +1,44 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
-// import AudioVisualizer from "../audioVisualizer"
-import AudioVisualizer, { useMultibandTrackVolume } from "@/components/Agent/AudioVisualizer"
-import { RemoteAudioTrack, useRemoteUsers, useRemoteUserTrack } from "agora-rtc-react";
-
-
-
+import { cn } from "@/lib/utils";
+import AudioVisualizer from "@/components/Agent/AudioVisualizer";
+import { 
+  RemoteAudioTrack, 
+  useRemoteUsers, 
+  useRemoteUserTrack 
+} from "agora-rtc-react";
+import { useMultibandTrackVolume } from "@/hooks/use-audio-visualizer";
+import { BotMessageSquareIcon } from "lucide-react";
 
 export default function AgentView() {
   const remoteUsers = useRemoteUsers();
   const { track } = useRemoteUserTrack(remoteUsers[0], "audio");
 
-  const subscribedVolumes = useMultibandTrackVolume(track, 12)
+  const subscribedVolumes = useMultibandTrackVolume(track, 12);
 
   return (
     <div
       className={cn(
-        "flex h-full w-full flex-col items-center justify-center px-4 py-5"
+        "flex h-full w-full flex-col items-center justify-center relative"
       )}
     >
-      <div className="h-14 w-full flex items-center justify-center ">
+      <div className="text-lg font-semibold text-primary absolute top-4">
+        <BotMessageSquareIcon size={48} />
+      </div>
+      <div className="h-12 w-full flex items-center justify-center mt-16">
         <AudioVisualizer
           type="agent"
           frequencies={subscribedVolumes}
-          barWidth={6}
-          minBarHeight={6}
-          maxBarHeight={56}
+          barWidth={4}
+          minBarHeight={4}
+          maxBarHeight={28}
           borderRadius={2}
-          gap={6}
+          gap={4}
         />
         {track && (
           <RemoteAudioTrack key={track.getUserId()} play track={track} />
         )}
       </div>
     </div>
-  )
+  );
 }
