@@ -62,9 +62,6 @@ export const getModels = async (
 				fetchedModels = await getUnboundModels()
 				break
 			case "litellm":
-				// getLiteLLMModels now throws on error.
-				// It needs baseUrl. apiKey is optional for the protocol but might be needed by the server.
-				console.log("litellm1212", baseUrl, apiKey)
 				if (!baseUrl || !apiKey) {
 					// This case should ideally be handled by the caller if baseUrl is strictly required.
 					// However, for robustness, if called without baseUrl for litellm, it would fail in getLiteLLMModels or here.
