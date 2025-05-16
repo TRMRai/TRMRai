@@ -32,11 +32,17 @@ export async function getLiteLLMModels(apiKey: string, baseUrl: string): Promise
 
 				if (!modelName || !modelInfo || !litellmModelName) continue
 
+				let determinedMaxTokens = modelInfo.max_tokens || modelInfo.max_output_tokens || 8192
+
+				if (modelName.includes("claude-3-7-sonnet")) {
+					// due to https://github.com/BerriAI/litellm/issues/8984 until proper extended thinking support is added
+					determinedMaxTokens = 64000
+				}
+
 				models[modelName] = {
-					maxTokens: modelInfo.max_tokens || 8192,
+					maxTokens: determinedMaxTokens,
 					contextWindow: modelInfo.max_input_tokens || 200000,
 					supportsImages: Boolean(modelInfo.supports_vision),
-					// litellm_params.model may have a prefix like openrouter/
 					supportsComputerUse: Boolean(modelInfo.supports_computer_use),
 					supportsPromptCache: Boolean(modelInfo.supports_prompt_caching),
 					inputPrice: modelInfo.input_cost_per_token ? modelInfo.input_cost_per_token * 1000000 : undefined,
