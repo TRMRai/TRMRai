@@ -69,7 +69,7 @@ describe("LiteLLMHandler", () => {
 
 		it("uses dummy API key if not provided", () => {
 			new LiteLLMHandler({ litellmBaseUrl: "url", litellmModelId: "id" })
-			expect(OpenAI).toHaveBeenCalledWith(expect.objectContaining({ apiKey: "dummy-key" }))
+			expect(OpenAI).toHaveBeenCalledWith(expect.objectContaining({ apiKey: "sk-1234" }))
 		})
 	})
 
