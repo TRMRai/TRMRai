@@ -318,23 +318,62 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "requestRouterModels":
 			const { apiConfiguration } = await provider.getState()
 
-			const [openRouterModels, requestyModels, glamaModels, unboundModels, litellmModels] = await Promise.all([
-				getModels("openrouter", apiConfiguration.openRouterApiKey),
-				getModels("requesty", apiConfiguration.requestyApiKey),
-				getModels("glama", apiConfiguration.glamaApiKey),
-				getModels("unbound", apiConfiguration.unboundApiKey),
-				getModels("litellm", apiConfiguration.litellmApiKey, apiConfiguration.litellmBaseUrl),
-			])
+			// Handle each model fetch independently to avoid one failure affecting others
+			const routerModels = {
+				openrouter: {},
+				requesty: {},
+				glama: {},
+				unbound: {},
+				litellm: {},
+			}
+
+			// Helper function to safely fetch models
+			const safeGetModels = async (router: RouterName, apiKey?: string, baseUrl?: string) => {
+				try {
+					return await getModels(router, apiKey, baseUrl)
+				} catch (error) {
+					console.error(`Failed to fetch models for ${router}:`, error)
+					return {} // Return empty object on failure
+				}
+			}
+
+			// Fetch all models in parallel but handle failures independently
+			const results = await Promise.allSettled(
+				[
+					{ key: "openrouter", promise: safeGetModels("openrouter", apiConfiguration.openRouterApiKey) },
+					{ key: "requesty", promise: safeGetModels("requesty", apiConfiguration.requestyApiKey) },
+					{ key: "glama", promise: safeGetModels("glama", apiConfiguration.glamaApiKey) },
+					{ key: "unbound", promise: safeGetModels("unbound", apiConfiguration.unboundApiKey) },
+					{
+						key: "litellm",
+						promise: safeGetModels(
+							"litellm",
+							apiConfiguration.litellmApiKey,
+							apiConfiguration.litellmBaseUrl,
+						),
+					},
+				].map(async ({ key, promise }) => {
+					try {
+						const models = await promise
+						return { key, models }
+					} catch (error) {
+						console.error(`Error in router models fetch for ${key}:`, error)
+						return { key, models: {} }
+					}
+				}),
+			)
+
+			// Process results and assign to routerModels
+			results.forEach((result) => {
+				if (result.status === "fulfilled") {
+					const key = result.value.key as keyof typeof routerModels
+					routerModels[key] = result.value.models
+				}
+			})
 
 			provider.postMessageToWebview({
 				type: "routerModels",
-				routerModels: {
-					openrouter: openRouterModels,
-					requesty: requestyModels,
-					glama: glamaModels,
-					unbound: unboundModels,
-					litellm: litellmModels,
-				},
+				routerModels,
 			})
 			break
 		case "requestOpenAiModels":
