@@ -6,6 +6,7 @@ import NodeCache from "node-cache"
 import { ContextProxy } from "../../../core/config/ContextProxy"
 import { getCacheDirectoryPath } from "../../../shared/storagePathManager"
 import { RouterName, ModelRecord } from "../../../shared/api"
+import { fileExistsAtPath } from "../../../utils/fs"
 
 import { getOpenRouterModels } from "./openrouter"
 import { getRequestyModels } from "./requesty"
@@ -19,6 +20,14 @@ async function writeModels(router: RouterName, data: ModelRecord) {
 	const filename = `${router}_models.json`
 	const cacheDir = await getCacheDirectoryPath(ContextProxy.instance.globalStorageUri.fsPath)
 	await fs.writeFile(path.join(cacheDir, filename), JSON.stringify(data))
+}
+
+async function readModels(router: RouterName): Promise<ModelRecord | undefined> {
+	const filename = `${router}_models.json`
+	const cacheDir = await getCacheDirectoryPath(ContextProxy.instance.globalStorageUri.fsPath)
+	const filePath = path.join(cacheDir, filename)
+	const exists = await fileExistsAtPath(filePath)
+	return exists ? JSON.parse(await fs.readFile(filePath, "utf8")) : undefined
 }
 
 /**
@@ -37,29 +46,26 @@ export const getModels = async (
 	apiKey: string | undefined = undefined,
 	baseUrl: string | undefined = undefined,
 ): Promise<ModelRecord> => {
-	// If this call is meant for a refresh (indicated by apiKey/baseUrl for specific routers),
-	// the memory cache should have been flushed by the caller (e.g., webviewMessageHandler).
-	// Otherwise, for general calls, check memory cache first.
-	const modelsFromMemory = memoryCache.get<ModelRecord>(router)
-	if (modelsFromMemory) {
-		return modelsFromMemory
+	let models = memoryCache.get<ModelRecord>(router)
+	if (models) {
+		return models
 	}
 
-	let fetchedModels: ModelRecord
 	try {
 		switch (router) {
 			case "openrouter":
-				fetchedModels = await getOpenRouterModels()
+				models = await getOpenRouterModels()
 				break
 			case "requesty":
-				// Assuming getRequestyModels will throw if apiKey is needed and not provided or invalid.
-				fetchedModels = await getRequestyModels(apiKey)
+				// Requesty models endpoint requires an API key for per-user custom policies
+				models = await getRequestyModels(apiKey)
 				break
 			case "glama":
-				fetchedModels = await getGlamaModels()
+				models = await getGlamaModels()
 				break
 			case "unbound":
-				fetchedModels = await getUnboundModels()
+				// Unbound models endpoint requires an API key to fetch application specific models
+				models = await getUnboundModels(apiKey)
 				break
 			case "litellm":
 				if (!baseUrl || !apiKey) {
@@ -67,7 +73,7 @@ export const getModels = async (
 					// However, for robustness, if called without baseUrl for litellm, it would fail in getLiteLLMModels or here.
 					throw new Error("Base URL and api key are required for LiteLLM models.")
 				}
-				fetchedModels = await getLiteLLMModels(apiKey || "", baseUrl)
+				models = await getLiteLLMModels(apiKey || "", baseUrl)
 				break
 			default:
 				// Ensures router is exhaustively checked if RouterName is a strict union
@@ -76,11 +82,18 @@ export const getModels = async (
 		}
 
 		// Cache the fetched models (even if empty, to signify a successful fetch with no models)
-		memoryCache.set(router, fetchedModels)
-		await writeModels(router, fetchedModels).catch((err) =>
+		memoryCache.set(router, models)
+		await writeModels(router, models).catch((err) =>
 			console.error(`[getModels] Error writing ${router} models to file cache:`, err),
 		)
-		return fetchedModels
+
+		try {
+			models = await readModels(router)
+			// console.log(`[getModels] read ${router} models from file cache`)
+		} catch (error) {
+			console.error(`[getModels] error reading ${router} models from file cache`, error)
+		}
+		return models || {}
 	} catch (error) {
 		// Log the error and re-throw it so the caller can handle it (e.g., show a UI message).
 		console.error(`[getModels] Failed to fetch models for ${router}:`, error)
@@ -89,10 +102,6 @@ export const getModels = async (
 	}
 }
 
-/**
- * Flush models memory cache for a specific router
- * @param router - The router to flush models for.
- */
 export const flushModels = async (router: RouterName) => {
 	memoryCache.del(router)
 }
