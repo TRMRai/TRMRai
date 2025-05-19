@@ -1,5 +1,6 @@
-import { useCallback, useState, useEffect } from "react"
+import { useCallback, useState } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { useEvent } from "react-use"
 
 import { ProviderSettings, RouterModels, litellmDefaultModelId } from "@roo/shared/api"
 import { vscode } from "@src/utils/vscode"
@@ -9,7 +10,7 @@ import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { inputEventTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
 import { WebviewMessage } from "@roo/shared/WebviewMessage"
-import { ExtensionMessage, ProviderModelsResponsePayload } from "@roo/shared/ExtensionMessage"
+import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
 
 type LiteLLMProps = {
 	apiConfiguration: ProviderSettings
@@ -49,28 +50,19 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField, routerMode
 		vscode.postMessage(message)
 	}
 
-	// Effect to listen for model refresh responses
-	useEffect(() => {
-		const handler = (event: MessageEvent<ExtensionMessage>) => {
-			const message = event.data
-			if (
-				message.type === "providerModelsResponse" &&
-				message.payload &&
-				message.payload.provider === "litellm"
-			) {
-				const payload = message.payload as ProviderModelsResponsePayload
-				if (payload.error) {
-					setRefreshStatus("error")
-					setRefreshError(payload.error)
-				} else {
-					setRefreshStatus("success")
-					// Parent (ApiOptions.tsx) will handle updating the routerModels prop for ModelPicker
-				}
+	// Listen for model refresh responses using useEvent
+	useEvent("message", (event: MessageEvent<ExtensionMessage>) => {
+		const message = event.data
+		if (message.type === "providerModelsResponse" && message.payload && message.payload.provider === "litellm") {
+			if (message.payload.error) {
+				setRefreshStatus("error")
+				setRefreshError(message.payload.error)
+			} else {
+				setRefreshStatus("success")
+				// Parent (ApiOptions.tsx) will handle updating the routerModels prop for ModelPicker
 			}
 		}
-		window.addEventListener("message", handler)
-		return () => window.removeEventListener("message", handler)
-	}, [])
+	})
 
 	return (
 		<>

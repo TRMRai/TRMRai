@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { convertHeadersToObject } from "./utils/headers"
-import { useDebounce } from "react-use"
+import { useDebounce, useEvent } from "react-use"
 import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 
 import {
@@ -55,6 +55,7 @@ import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
+import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
 
 export interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -152,27 +153,19 @@ const ApiOptions = ({
 		}
 	}, [initialRouterModels, defaultRouterModels])
 
-	// Listen for specific provider model updates
-	useEffect(() => {
-		const handler = (event: MessageEvent<any>) => {
-			const message = event.data
-			if (message.type === "providerModelsResponse" && message.payload) {
-				const { provider, models, error } = message.payload as {
-					provider: keyof RouterModels
-					models?: ModelRecord
-					error?: string
-				}
-				if (provider && models && !error) {
-					setCurrentRouterModels((prevModels) => ({
-						...prevModels, // prevModels is now guaranteed to be RouterModels
-						[provider]: models,
-					}))
-				}
+	// Listen for specific provider model updates using useEvent
+	useEvent("message", (event: MessageEvent<ExtensionMessage>) => {
+		const message = event.data
+		if (message.type === "providerModelsResponse" && message.payload) {
+			const { provider, models, error } = message.payload
+			if (provider && models && !error) {
+				setCurrentRouterModels((prevModels) => ({
+					...prevModels,
+					[provider]: models,
+				}))
 			}
 		}
-		window.addEventListener("message", handler)
-		return () => window.removeEventListener("message", handler)
-	}, [])
+	})
 
 	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
