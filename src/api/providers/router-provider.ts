@@ -1,6 +1,6 @@
 import OpenAI from "openai"
 
-import { ApiHandlerOptions, RouterName, ModelRecord, ModelInfo } from "../../shared/api"
+import { ApiHandlerOptions, RouterName, ModelRecord, ModelInfo, GetModelsOptions } from "../../shared/api"
 import { BaseProvider } from "./base-provider"
 import { getModels } from "./fetchers/modelCache"
 
@@ -51,7 +51,31 @@ export abstract class RouterProvider extends BaseProvider {
 	}
 
 	public async fetchModel() {
-		this.models = await getModels(this.name, this.apiKey, this.baseURL)
+		// Create the appropriate options based on router type
+		let options: GetModelsOptions
+
+		switch (this.name) {
+			case "openrouter":
+				options = { provider: "openrouter" }
+				break
+			case "glama":
+				options = { provider: "glama" }
+				break
+			case "requesty":
+				options = { provider: "requesty", apiKey: this.apiKey }
+				break
+			case "unbound":
+				options = { provider: "unbound", apiKey: this.apiKey }
+				break
+			case "litellm":
+				options = { provider: "litellm", apiKey: this.apiKey, baseUrl: this.baseURL }
+				break
+			default:
+				const exhaustiveCheck: never = this.name
+				throw new Error(`Unknown provider: ${exhaustiveCheck}`)
+		}
+
+		this.models = await getModels(options)
 		return this.getModel()
 	}
 

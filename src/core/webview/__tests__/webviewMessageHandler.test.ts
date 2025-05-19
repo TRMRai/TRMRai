@@ -33,10 +33,11 @@ describe("webviewMessageHandler", () => {
 	describe("requestRouterModels", () => {
 		test("handles all successful model fetches correctly", async () => {
 			// Mock all getModels calls to succeed with different data
-			;(getModels as jest.Mock).mockImplementation((router) => {
+			;(getModels as jest.Mock).mockImplementation((options) => {
+				const provider = options.provider
 				return Promise.resolve({
-					[`${router}-model-1`]: { name: `${router} Model 1` },
-					[`${router}-model-2`]: { name: `${router} Model 2` },
+					[`${provider}-model-1`]: { name: `${provider} Model 1` },
+					[`${provider}-model-2`]: { name: `${provider} Model 2` },
 				})
 			})
 
@@ -75,14 +76,15 @@ describe("webviewMessageHandler", () => {
 
 		test("handles some failed model fetches correctly", async () => {
 			// Mock some getModels calls to succeed and others to fail
-			;(getModels as jest.Mock).mockImplementation((router) => {
-				if (router === "openrouter" || router === "litellm") {
+			;(getModels as jest.Mock).mockImplementation((options) => {
+				const provider = options.provider
+				if (provider === "openrouter" || provider === "litellm") {
 					return Promise.resolve({
-						[`${router}-model-1`]: { name: `${router} Model 1` },
+						[`${provider}-model-1`]: { name: `${provider} Model 1` },
 					})
 				}
-				// For other routers, throw an error
-				return Promise.reject(new Error(`Failed to fetch ${router} models`))
+				// For other providers, throw an error
+				return Promise.reject(new Error(`Failed to fetch ${provider} models`))
 			})
 
 			// Call the handler
@@ -127,6 +129,48 @@ describe("webviewMessageHandler", () => {
 					litellm: {},
 				},
 			})
+		})
+	})
+
+	describe("requestProviderModels", () => {
+		test("when getModels succeeds, it posts a providerModelsResponse with models", async () => {
+			const mockLiteLLMModels = { "litellm-model-1": { name: "LiteLLM Model 1" } }
+			;(getModels as jest.Mock).mockResolvedValueOnce(mockLiteLLMModels)
+
+			await webviewMessageHandler(mockProvider as any, {
+				type: "requestProviderModels",
+				payload: { provider: "litellm", apiKey: "test-key", baseUrl: "test-url" },
+			})
+
+			expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
+				type: "providerModelsResponse",
+				payload: {
+					provider: "litellm",
+					models: mockLiteLLMModels,
+					error: undefined, // Explicitly check error is undefined on success
+				},
+			})
+			expect(getModels).toHaveBeenCalledWith({ provider: "litellm", apiKey: "test-key", baseUrl: "test-url" })
+		})
+
+		test("when getModels fails, it posts a providerModelsResponse with an error and empty models", async () => {
+			const errorMessage = "Failed to fetch LiteLLM models: No response from server."
+			;(getModels as jest.Mock).mockRejectedValueOnce(new Error(errorMessage))
+
+			await webviewMessageHandler(mockProvider as any, {
+				type: "requestProviderModels",
+				payload: { provider: "litellm", apiKey: "test-key", baseUrl: "test-url" },
+			})
+
+			expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
+				type: "providerModelsResponse",
+				payload: {
+					provider: "litellm",
+					models: {},
+					error: errorMessage,
+				},
+			})
+			expect(getModels).toHaveBeenCalledWith({ provider: "litellm", apiKey: "test-key", baseUrl: "test-url" })
 		})
 	})
 })

@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { ProviderSettings, RouterName } from "./api"
+import { ProviderSettings, GetModelsOptions } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
@@ -153,7 +153,7 @@ export interface WebviewMessage {
 	slug?: string
 	modeConfig?: ModeConfig
 	timeout?: number
-	payload?: WebViewMessagePayload | RequestProviderModelsPayload
+	payload?: WebViewMessagePayload
 	source?: "global" | "project"
 	requestId?: string
 	ids?: string[]
@@ -179,11 +179,4 @@ export const checkoutRestorePayloadSchema = z.object({
 
 export type CheckpointRestorePayload = z.infer<typeof checkoutRestorePayloadSchema>
 
-export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload
-
-// Payload for requestProviderModels
-export interface RequestProviderModelsPayload {
-	provider: RouterName
-	apiKey?: string
-	baseUrl?: string
-}
+export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload | GetModelsOptions

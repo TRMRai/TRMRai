@@ -39,12 +39,18 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField, routerMode
 	const handleRefreshModels = () => {
 		setRefreshStatus("loading")
 		setRefreshError(undefined)
+
+		// Due to the button's disabled state logic, litellmApiKey and litellmBaseUrl are guaranteed to be non-empty strings here.
+		// We use non-null assertions (!) to reflect this guarantee for type safety.
+		const key = apiConfiguration.litellmApiKey!
+		const url = apiConfiguration.litellmBaseUrl!
+
 		const message: WebviewMessage = {
 			type: "requestProviderModels",
 			payload: {
 				provider: "litellm",
-				apiKey: apiConfiguration.litellmApiKey,
-				baseUrl: apiConfiguration.litellmBaseUrl || "http://localhost:4000",
+				apiKey: key,
+				baseUrl: url,
 			},
 		}
 		vscode.postMessage(message)
@@ -53,21 +59,30 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField, routerMode
 	// Listen for model refresh responses using useEvent
 	useEvent("message", (event: MessageEvent<ExtensionMessage>) => {
 		const message = event.data
-		if (message.type === "providerModelsResponse" && message.payload && message.payload.provider === "litellm") {
-			if (message.payload.error) {
-				setRefreshStatus("error")
-				setRefreshError(message.payload.error)
+		if (message.type === "providerModelsResponse") {
+			if (message.payload && message.payload.provider === "litellm") {
+				if (message.payload.error) {
+					console.log("LiteLLM.tsx: Error found in payload:", message.payload.error)
+					setRefreshStatus("error")
+					setRefreshError(message.payload.error)
+				} else {
+					setRefreshStatus("success")
+					// Parent (ApiOptions.tsx) will handle updating the routerModels prop for ModelPicker
+				}
 			} else {
-				setRefreshStatus("success")
-				// Parent (ApiOptions.tsx) will handle updating the routerModels prop for ModelPicker
+				console.log(
+					"LiteLLM.tsx: Received providerModelsResponse but not for litellm or payload missing. Provider:",
+					message.payload?.provider,
+				)
 			}
 		}
 	})
+	console.log("apiconfig1212", apiConfiguration)
 
 	return (
 		<>
 			<VSCodeTextField
-				value={apiConfiguration?.litellmBaseUrl || "http://localhost:4000"}
+				value={apiConfiguration?.litellmBaseUrl || ""}
 				onInput={handleInputChange("litellmBaseUrl")}
 				placeholder="http://localhost:4000"
 				className="w-full">
@@ -90,7 +105,9 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField, routerMode
 			<Button
 				variant="outline"
 				onClick={handleRefreshModels}
-				disabled={refreshStatus === "loading"}
+				disabled={
+					refreshStatus === "loading" || !apiConfiguration.litellmApiKey || !apiConfiguration.litellmBaseUrl
+				}
 				className="w-full">
 				<div className="flex items-center gap-2">
 					{refreshStatus === "loading" ? (

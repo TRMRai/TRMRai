@@ -1,5 +1,6 @@
-import { useCallback, useState, useEffect } from "react"
+import { useCallback, useState } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { useEvent } from "react-use"
 
 import { ProviderSettings, RouterModels, requestyDefaultModelId } from "@roo/shared/api"
 import { vscode } from "@src/utils/vscode"
@@ -48,26 +49,18 @@ export const Requesty = ({ apiConfiguration, setApiConfigurationField, routerMod
 		vscode.postMessage(message)
 	}
 
-	useEffect(() => {
-		const handler = (event: MessageEvent<ExtensionMessage>) => {
-			const message = event.data
-			if (
-				message.type === "providerModelsResponse" &&
-				message.payload &&
-				message.payload.provider === "requesty"
-			) {
-				const payload = message.payload as ProviderModelsResponsePayload
-				if (payload.error) {
-					setRefreshStatus("error")
-					setRefreshError(payload.error)
-				} else {
-					setRefreshStatus("success")
-				}
+	useEvent("message", (event: MessageEvent<ExtensionMessage>) => {
+		const message = event.data
+		if (message.type === "providerModelsResponse" && message.payload && message.payload.provider === "requesty") {
+			const payload = message.payload as ProviderModelsResponsePayload
+			if (payload.error) {
+				setRefreshStatus("error")
+				setRefreshError(payload.error)
+			} else {
+				setRefreshStatus("success")
 			}
 		}
-		window.addEventListener("message", handler)
-		return () => window.removeEventListener("message", handler)
-	}, [])
+	})
 
 	return (
 		<>

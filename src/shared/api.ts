@@ -1792,3 +1792,15 @@ export function toRouterName(value?: string): RouterName {
 export type ModelRecord = Record<string, ModelInfo>
 
 export type RouterModels = Record<RouterName, ModelRecord>
+
+/**
+ * Options for fetching models from different providers.
+ * This is a discriminated union type where the provider property determines
+ * which other properties are required.
+ */
+export type GetModelsOptions =
+	| { provider: "openrouter" }
+	| { provider: "glama" }
+	| { provider: "requesty"; apiKey?: string }
+	| { provider: "unbound"; apiKey?: string }
+	| { provider: "litellm"; apiKey: string; baseUrl: string }

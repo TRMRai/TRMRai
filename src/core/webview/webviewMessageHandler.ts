@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 import { ClineProvider } from "./ClineProvider"
 import { Language, ProviderSettings } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
-import { RouterName, toRouterName } from "../../shared/api"
+import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -34,17 +34,11 @@ import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { GlobalState } from "../../schemas"
-import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
+import { flushModels, getModels } from "../../api/providers/fetchers/modelCache"
+import { GetModelsOptions } from "../../shared/api"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
-
-// Define a type for the payload of requestProviderModels for clarity
-interface RequestProviderModelsPayload {
-	provider: RouterName // Should be 'litellm' or 'requesty' here
-	apiKey?: string
-	baseUrl?: string
-}
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -284,42 +278,54 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await flushModels(routerNameFlush)
 			break
 		case "requestProviderModels": {
-			const payload = message.payload as RequestProviderModelsPayload | undefined
-			if (!payload || !payload.provider) {
+			const optionsFromPayload = message.payload as any // Check payload structure first
+
+			if (
+				typeof optionsFromPayload !== "object" ||
+				optionsFromPayload === null ||
+				typeof optionsFromPayload.provider !== "string" ||
+				!optionsFromPayload.provider
+			) {
+				const providerNameForError =
+					typeof optionsFromPayload?.provider === "string" && optionsFromPayload.provider
+						? (optionsFromPayload.provider as RouterName)
+						: ("unknown" as RouterName)
+
 				provider.postMessageToWebview({
 					type: "providerModelsResponse",
 					payload: {
-						provider: payload?.provider || ("unknown" as RouterName),
-						error: "Invalid payload for requestProviderModels",
+						provider: providerNameForError,
+						error: "Invalid payload for requestProviderModels: payload must be an object with a valid 'provider' string property.",
 					},
 				})
 				break
 			}
 
-			const targetProvider = payload.provider as RouterName
-			let models = {}
+			const options = optionsFromPayload as GetModelsOptions // Now cast to GetModelsOptions
+
+			let models: ModelRecord = {}
 			let error: string | undefined
 
 			try {
-				await flushModels(targetProvider)
-
-				models = await getModels(targetProvider, payload.apiKey, payload.baseUrl)
+				await flushModels(options.provider)
+				models = await getModels(options)
 			} catch (e: any) {
-				error = e.message || `Failed to fetch models for ${targetProvider}. Check console for details.`
+				error =
+					e.message ||
+					`Failed to fetch models in webviewMessageHandler requestProviderModels for ${options.provider}. Check console for details.`
 				models = {}
 			}
 
 			provider.postMessageToWebview({
 				type: "providerModelsResponse",
-				payload: { provider: targetProvider, models, error },
+				payload: { provider: options.provider, models, error },
 			})
 			break
 		}
 		case "requestRouterModels":
 			const { apiConfiguration } = await provider.getState()
 
-			// Handle each model fetch independently to avoid one failure affecting others
-			const routerModels = {
+			const routerModels: Partial<Record<RouterName, ModelRecord>> = {
 				openrouter: {},
 				requesty: {},
 				glama: {},
@@ -327,53 +333,58 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				litellm: {},
 			}
 
-			// Helper function to safely fetch models
-			const safeGetModels = async (router: RouterName, apiKey?: string, baseUrl?: string) => {
+			const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
 				try {
-					return await getModels(router, apiKey, baseUrl)
+					return await getModels(options)
 				} catch (error) {
-					console.error(`Failed to fetch models for ${router}:`, error)
-					return {} // Return empty object on failure
+					console.error(
+						`Failed to fetch models in webviewMessageHandler requestRouterModels for ${options.provider}:`,
+						error,
+					)
+					return {}
 				}
 			}
 
-			// Fetch all models in parallel but handle failures independently
+			const modelFetchPromises: Array<{ key: RouterName; options: GetModelsOptions }> = [
+				{ key: "openrouter", options: { provider: "openrouter" } },
+				{ key: "requesty", options: { provider: "requesty", apiKey: apiConfiguration.requestyApiKey } },
+				{ key: "glama", options: { provider: "glama" } },
+				{ key: "unbound", options: { provider: "unbound", apiKey: apiConfiguration.unboundApiKey } },
+			]
+
+			const litellmApiKey = apiConfiguration.litellmApiKey
+			const litellmBaseUrl = apiConfiguration.litellmBaseUrl
+
+			if (litellmApiKey && litellmBaseUrl) {
+				modelFetchPromises.push({
+					key: "litellm",
+					options: { provider: "litellm", apiKey: litellmApiKey, baseUrl: litellmBaseUrl },
+				})
+			}
+
 			const results = await Promise.allSettled(
-				[
-					{ key: "openrouter", promise: safeGetModels("openrouter", apiConfiguration.openRouterApiKey) },
-					{ key: "requesty", promise: safeGetModels("requesty", apiConfiguration.requestyApiKey) },
-					{ key: "glama", promise: safeGetModels("glama", apiConfiguration.glamaApiKey) },
-					{ key: "unbound", promise: safeGetModels("unbound", apiConfiguration.unboundApiKey) },
-					{
-						key: "litellm",
-						promise: safeGetModels(
-							"litellm",
-							apiConfiguration.litellmApiKey,
-							apiConfiguration.litellmBaseUrl,
-						),
-					},
-				].map(async ({ key, promise }) => {
+				modelFetchPromises.map(async ({ key, options }) => {
 					try {
-						const models = await promise
+						const models = await safeGetModels(options)
 						return { key, models }
 					} catch (error) {
-						console.error(`Error in router models fetch for ${key}:`, error)
+						console.error(`Outer catch: Error in router models fetch for ${key}:`, error)
 						return { key, models: {} }
 					}
 				}),
 			)
 
-			// Process results and assign to routerModels
 			results.forEach((result) => {
 				if (result.status === "fulfilled") {
-					const key = result.value.key as keyof typeof routerModels
-					routerModels[key] = result.value.models
+					routerModels[result.value.key] = result.value.models
+				} else {
+					console.error("A model fetching promise was rejected:", result.reason)
 				}
 			})
 
 			provider.postMessageToWebview({
 				type: "routerModels",
-				routerModels,
+				routerModels: routerModels as Record<RouterName, ModelRecord>,
 			})
 			break
 		case "requestOpenAiModels":

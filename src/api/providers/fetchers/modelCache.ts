@@ -5,7 +5,7 @@ import NodeCache from "node-cache"
 
 import { ContextProxy } from "../../../core/config/ContextProxy"
 import { getCacheDirectoryPath } from "../../../shared/storagePathManager"
-import { RouterName, ModelRecord } from "../../../shared/api"
+import { RouterName, ModelRecord, GetModelsOptions } from "../../../shared/api"
 import { fileExistsAtPath } from "../../../utils/fs"
 
 import { getOpenRouterModels } from "./openrouter"
@@ -31,18 +31,6 @@ async function readModels(router: RouterName): Promise<ModelRecord | undefined> 
 }
 
 /**
- * Options for fetching models from different routers.
- * This is a discriminated union type where the router property determines
- * which other properties are required.
- */
-export type GetModelsOptions =
-	| { router: "openrouter" }
-	| { router: "glama" }
-	| { router: "requesty"; apiKey?: string }
-	| { router: "unbound"; apiKey?: string }
-	| { router: "litellm"; apiKey: string; baseUrl: string }
-
-/**
  * Get models from the cache or fetch them from the provider and cache them.
  * There are two caches:
  * 1. Memory cache - This is a simple in-memory cache that is used to store models for a short period of time.
@@ -52,14 +40,14 @@ export type GetModelsOptions =
  * @returns The models from the cache or the fetched models.
  */
 export const getModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
-	const { router } = options
-	let models = memoryCache.get<ModelRecord>(router)
+	const { provider } = options
+	let models = memoryCache.get<ModelRecord>(provider)
 	if (models) {
 		return models
 	}
 
 	try {
-		switch (router) {
+		switch (provider) {
 			case "openrouter":
 				models = await getOpenRouterModels()
 				break
@@ -80,26 +68,26 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 				break
 			default:
 				// Ensures router is exhaustively checked if RouterName is a strict union
-				const exhaustiveCheck: never = router
+				const exhaustiveCheck: never = provider
 				throw new Error(`Unknown router: ${exhaustiveCheck}`)
 		}
 
 		// Cache the fetched models (even if empty, to signify a successful fetch with no models)
-		memoryCache.set(router, models)
-		await writeModels(router, models).catch((err) =>
-			console.error(`[getModels] Error writing ${router} models to file cache:`, err),
+		memoryCache.set(provider, models)
+		await writeModels(provider, models).catch((err) =>
+			console.error(`[getModels] Error writing ${provider} models to file cache:`, err),
 		)
 
 		try {
-			models = await readModels(router)
+			models = await readModels(provider)
 			// console.log(`[getModels] read ${router} models from file cache`)
 		} catch (error) {
-			console.error(`[getModels] error reading ${router} models from file cache`, error)
+			console.error(`[getModels] error reading ${provider} models from file cache`, error)
 		}
 		return models || {}
 	} catch (error) {
 		// Log the error and re-throw it so the caller can handle it (e.g., show a UI message).
-		console.error(`[getModels] Failed to fetch models for ${router}:`, error)
+		console.error(`[getModels] Failed to fetch models in modelCache for ${provider}:`, error)
 
 		throw error // Re-throw the original error to be handled by the caller.
 	}

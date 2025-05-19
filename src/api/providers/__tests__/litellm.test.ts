@@ -77,11 +77,11 @@ describe("LiteLLMHandler", () => {
 		it("returns correct model info when modelId is provided and found in getModels", async () => {
 			const handler = new LiteLLMHandler(defaultMockOptions)
 			const result = await handler.fetchModel()
-			expect(mockGetModels).toHaveBeenCalledWith(
-				"litellm",
-				defaultMockOptions.litellmApiKey,
-				defaultMockOptions.litellmBaseUrl,
-			)
+			expect(mockGetModels).toHaveBeenCalledWith({
+				provider: "litellm",
+				apiKey: defaultMockOptions.litellmApiKey,
+				baseUrl: defaultMockOptions.litellmBaseUrl,
+			})
 			expect(result).toEqual({ id: defaultMockOptions.litellmModelId, info: mockModelInfo })
 		})
 
