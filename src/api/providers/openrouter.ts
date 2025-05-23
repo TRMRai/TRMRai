@@ -85,7 +85,10 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		} = await this.fetchModel()
 
 		// For virtual :thinking models, use the base model ID for the API call
-		const apiModelId = modelId.endsWith(":thinking") ? modelId.replace(":thinking", "") : modelId
+		// Only strip :thinking from models that are artificially created virtual variants
+		const isVirtualThinkingModel =
+			modelId === "anthropic/claude-sonnet-4:thinking" || modelId === "anthropic/claude-opus-4:thinking"
+		const apiModelId = isVirtualThinkingModel ? modelId.replace(":thinking", "") : modelId
 
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -115,11 +118,10 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			...(maxTokens && maxTokens > 0 && { max_tokens: maxTokens }),
 			temperature,
 			// For virtual :thinking models, use OpenRouter's reasoning tokens instead of Anthropic's thinking
-			...(modelId.endsWith(":thinking") && thinking
+			...(isVirtualThinkingModel && thinking
 				? {
-						reasoning: thinking?.budget_tokens
-							? { max_tokens: thinking.budget_tokens }
-							: { effort: reasoningEffort || "medium" },
+						// Only use max_tokens if budget_tokens is specified, don't use effort for Anthropic models
+						...(thinking?.budget_tokens && { reasoning: { max_tokens: thinking.budget_tokens } }),
 					}
 				: {
 						// For non-thinking models, use Anthropic's thinking parameter if available
@@ -143,7 +145,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			// Original reasoning logic for non-virtual thinking models (like Grok)
 			...(REASONING_MODELS.has(modelId) &&
 				reasoningEffort &&
-				!modelId.endsWith(":thinking") && { reasoning: { effort: reasoningEffort } }),
+				!isVirtualThinkingModel && { reasoning: { effort: reasoningEffort } }),
 		}
 
 		const stream = await this.client.chat.completions.create(completionParams)
@@ -235,17 +237,19 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		let { id: modelId, maxTokens, thinking, temperature, reasoningEffort } = await this.fetchModel()
 
 		// For virtual :thinking models, use the base model ID for the API call
-		const apiModelId = modelId.endsWith(":thinking") ? modelId.replace(":thinking", "") : modelId
+		// Only strip :thinking from models that are artificially created virtual variants
+		const isVirtualThinkingModel =
+			modelId === "anthropic/claude-sonnet-4:thinking" || modelId === "anthropic/claude-opus-4:thinking"
+		const apiModelId = isVirtualThinkingModel ? modelId.replace(":thinking", "") : modelId
 
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: apiModelId,
 			max_tokens: maxTokens,
 			// For virtual :thinking models, use OpenRouter's reasoning tokens instead of Anthropic's thinking
-			...(modelId.endsWith(":thinking") && thinking
+			...(isVirtualThinkingModel && thinking
 				? {
-						reasoning: thinking?.budget_tokens
-							? { max_tokens: thinking.budget_tokens }
-							: { effort: reasoningEffort || "medium" },
+						// Only use max_tokens if budget_tokens is specified, don't use effort for Anthropic models
+						...(thinking?.budget_tokens && { reasoning: { max_tokens: thinking.budget_tokens } }),
 					}
 				: {
 						// For non-thinking models, use Anthropic's thinking parameter if available
