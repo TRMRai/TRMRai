@@ -88,7 +88,8 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField }: LiteLLMP
 				value={apiConfiguration?.litellmBaseUrl || ""}
 				onInput={handleInputChange("litellmBaseUrl")}
 				placeholder={t("settings:placeholders.baseUrl")}
-				className="w-full">
+				className="w-full"
+				data-testid="litellm-base-url-input">
 				<label className="block font-medium mb-1">{t("settings:providers.litellmBaseUrl")}</label>
 			</VSCodeTextField>
 
@@ -97,7 +98,8 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField }: LiteLLMP
 				type="password"
 				onInput={handleInputChange("litellmApiKey")}
 				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
+				className="w-full"
+				data-testid="litellm-api-key-input">
 				<label className="block font-medium mb-1">{t("settings:providers.litellmApiKey")}</label>
 			</VSCodeTextField>
 
@@ -111,7 +113,8 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField }: LiteLLMP
 				disabled={
 					refreshStatus === "loading" || !apiConfiguration.litellmApiKey || !apiConfiguration.litellmBaseUrl
 				}
-				className="w-full">
+				className="w-full"
+				data-testid="litellm-refresh-models-button">
 				<div className="flex items-center gap-2">
 					{refreshStatus === "loading" ? (
 						<span className="codicon codicon-loading codicon-modifier-spin" />
@@ -122,15 +125,17 @@ export const LiteLLM = ({ apiConfiguration, setApiConfigurationField }: LiteLLMP
 				</div>
 			</Button>
 			{refreshStatus === "loading" && (
-				<div className="text-sm text-vscode-descriptionForeground">
+				<div className="text-sm text-vscode-descriptionForeground" data-testid="litellm-loading-message">
 					{t("settings:providers.refreshModels.loading")}
 				</div>
 			)}
 			{refreshStatus === "success" && (
-				<div className="text-sm text-vscode-foreground">{t("settings:providers.refreshModels.success")}</div>
+				<div className="text-sm text-vscode-foreground" data-testid="litellm-success-message">
+					{t("settings:providers.refreshModels.success")}
+				</div>
 			)}
 			{refreshStatus === "error" && (
-				<div className="text-sm text-vscode-errorForeground">
+				<div className="text-sm text-vscode-errorForeground" data-testid="litellm-error-message">
 					{refreshError || t("settings:providers.refreshModels.error")}
 				</div>
 			)}

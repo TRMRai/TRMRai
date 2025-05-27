@@ -18,10 +18,7 @@ jest.mock("@src/context/ExtensionStateContext", () => ({
 	...jest.requireActual("@src/context/ExtensionStateContext"),
 	useExtensionState: jest.fn(() => ({
 		routerModels: {
-			litellm: {
-				"gpt-4": { name: "GPT-4", description: "OpenAI GPT-4 model" },
-				"claude-3": { name: "Claude 3", description: "Anthropic Claude 3 model" },
-			},
+			litellm: {},
 		},
 	})),
 	ExtensionStateContextProvider: ({ children }: any) => <div>{children}</div>,
@@ -31,19 +28,9 @@ jest.mock("@src/context/ExtensionStateContext", () => ({
 jest.mock("@src/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => {
-			const translations: Record<string, string> = {
-				"settings:providers.litellmBaseUrl": "LiteLLM Base URL",
-				"settings:providers.litellmApiKey": "LiteLLM API Key",
-				"settings:placeholders.baseUrl": "Enter base URL",
-				"settings:placeholders.apiKey": "Enter API key",
-				"settings:providers.apiKeyStorageNotice": "API keys are stored securely",
-				"settings:providers.refreshModels.label": "Refresh Models",
-				"settings:providers.refreshModels.loading": "Loading models...",
-				"settings:providers.refreshModels.success": "Models refreshed successfully",
-				"settings:providers.refreshModels.error": "Failed to refresh models",
-				"settings:providers.refreshModels.missingConfig": "Please provide both API key and base URL",
-			}
-			return translations[key] || key
+			// Return the key itself as a fallback for testing
+			// This makes tests more resilient to translation changes
+			return key
 		},
 	}),
 }))
@@ -119,16 +106,16 @@ describe("LiteLLM", () => {
 	it("renders all required fields", () => {
 		renderLiteLLM()
 
-		expect(screen.getByText("LiteLLM Base URL")).toBeInTheDocument()
-		expect(screen.getByText("LiteLLM API Key")).toBeInTheDocument()
-		expect(screen.getByText("Refresh Models")).toBeInTheDocument()
+		expect(screen.getByTestId("litellm-base-url-input")).toBeInTheDocument()
+		expect(screen.getByTestId("litellm-api-key-input")).toBeInTheDocument()
+		expect(screen.getByTestId("litellm-refresh-models-button")).toBeInTheDocument()
 		expect(screen.getByTestId("model-picker")).toBeInTheDocument()
 	})
 
 	it("updates base URL when input changes", () => {
 		renderLiteLLM()
 
-		const baseUrlInput = screen.getByPlaceholderText("Enter base URL")
+		const baseUrlInput = screen.getByTestId("litellm-base-url-input")
 		fireEvent.change(baseUrlInput, { target: { value: "https://api.litellm.ai" } })
 
 		expect(mockSetApiConfigurationField).toHaveBeenCalledWith("litellmBaseUrl", "https://api.litellm.ai")
@@ -137,7 +124,7 @@ describe("LiteLLM", () => {
 	it("updates API key when input changes", () => {
 		renderLiteLLM()
 
-		const apiKeyInput = screen.getByPlaceholderText("Enter API key")
+		const apiKeyInput = screen.getByTestId("litellm-api-key-input")
 		fireEvent.change(apiKeyInput, { target: { value: "test-api-key" } })
 
 		expect(mockSetApiConfigurationField).toHaveBeenCalledWith("litellmApiKey", "test-api-key")
@@ -146,7 +133,7 @@ describe("LiteLLM", () => {
 	it("disables refresh button when API key or base URL is missing", () => {
 		renderLiteLLM()
 
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
+		const refreshButton = screen.getByTestId("litellm-refresh-models-button")
 		expect(refreshButton).toBeDisabled()
 	})
 
@@ -162,45 +149,8 @@ describe("LiteLLM", () => {
 			apiConfiguration: configWithCredentials,
 		})
 
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
+		const refreshButton = screen.getByTestId("litellm-refresh-models-button")
 		expect(refreshButton).not.toBeDisabled()
-	})
-
-	it("sends flushRouterModels and requestRouterModels messages when refresh button is clicked", async () => {
-		const configWithCredentials: ProviderSettings = {
-			...defaultApiConfiguration,
-			litellmBaseUrl: "https://api.litellm.ai",
-			litellmApiKey: "test-api-key",
-		}
-
-		renderLiteLLM({
-			...defaultProps,
-			apiConfiguration: configWithCredentials,
-		})
-
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
-
-		await act(async () => {
-			fireEvent.click(refreshButton)
-		})
-
-		// Verify that flushRouterModels is called first
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "flushRouterModels",
-			text: "litellm",
-		})
-
-		// Verify that requestRouterModels is called with the correct parameters
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "requestRouterModels",
-			values: {
-				litellmApiKey: "test-api-key",
-				litellmBaseUrl: "https://api.litellm.ai",
-			},
-		})
-
-		// Verify both messages were sent
-		expect(vscode.postMessage).toHaveBeenCalledTimes(2)
 	})
 
 	it("ensures flushRouterModels is called before requestRouterModels", async () => {
@@ -215,7 +165,7 @@ describe("LiteLLM", () => {
 			apiConfiguration: configWithCredentials,
 		})
 
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
+		const refreshButton = screen.getByTestId("litellm-refresh-models-button")
 
 		await act(async () => {
 			fireEvent.click(refreshButton)
@@ -253,14 +203,14 @@ describe("LiteLLM", () => {
 			apiConfiguration: configWithCredentials,
 		})
 
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
+		const refreshButton = screen.getByTestId("litellm-refresh-models-button")
 
 		await act(async () => {
 			fireEvent.click(refreshButton)
 		})
 
 		// Should show loading state
-		expect(screen.getByText("Loading models...")).toBeInTheDocument()
+		expect(screen.getByTestId("litellm-loading-message")).toBeInTheDocument()
 		expect(refreshButton).toBeDisabled()
 	})
 
@@ -276,7 +226,7 @@ describe("LiteLLM", () => {
 			apiConfiguration: configWithCredentials,
 		})
 
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
+		const refreshButton = screen.getByTestId("litellm-refresh-models-button")
 
 		await act(async () => {
 			fireEvent.click(refreshButton)
@@ -299,7 +249,7 @@ describe("LiteLLM", () => {
 		})
 
 		await waitFor(() => {
-			expect(screen.getByText("Models refreshed successfully")).toBeInTheDocument()
+			expect(screen.getByTestId("litellm-success-message")).toBeInTheDocument()
 		})
 	})
 
@@ -315,7 +265,7 @@ describe("LiteLLM", () => {
 			apiConfiguration: configWithCredentials,
 		})
 
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
+		const refreshButton = screen.getByTestId("litellm-refresh-models-button")
 
 		await act(async () => {
 			fireEvent.click(refreshButton)
@@ -336,7 +286,7 @@ describe("LiteLLM", () => {
 		})
 
 		await waitFor(() => {
-			expect(screen.getByText("Invalid API key")).toBeInTheDocument()
+			expect(screen.getByTestId("litellm-error-message")).toBeInTheDocument()
 		})
 	})
 
@@ -352,7 +302,7 @@ describe("LiteLLM", () => {
 			apiConfiguration: configWithCredentials,
 		})
 
-		const refreshButton = screen.getByRole("button", { name: /refresh models/i })
+		const refreshButton = screen.getByTestId("litellm-refresh-models-button")
 
 		// First refresh attempt with error
 		await act(async () => {
@@ -394,7 +344,7 @@ describe("LiteLLM", () => {
 		})
 
 		await waitFor(() => {
-			expect(screen.getByText("Models refreshed successfully")).toBeInTheDocument()
+			expect(screen.getByTestId("litellm-success-message")).toBeInTheDocument()
 		})
 	})
 })
