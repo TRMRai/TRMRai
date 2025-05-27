@@ -34,22 +34,26 @@ import {
 
 import { useRouterModels } from "./useRouterModels"
 import { useOpenRouterModelProviders } from "./useOpenRouterModelProviders"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
 
 export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 	const provider = apiConfiguration?.apiProvider || "anthropic"
 	const openRouterModelId = provider === "openrouter" ? apiConfiguration?.openRouterModelId : undefined
 
-	const routerModels = useRouterModels()
+	const { routerModels: contextRouterModels } = useExtensionState()
+	const queryRouterModels = useRouterModels()
 	const openRouterModelProviders = useOpenRouterModelProviders(openRouterModelId)
 
+	// Router providers use context system, others use React Query system
+	const isRouterProvider = ["openrouter", "requesty", "glama", "unbound", "litellm"].includes(provider)
+	const routerModels = isRouterProvider ? contextRouterModels : queryRouterModels.data
+
 	const { id, info } =
-		apiConfiguration &&
-		typeof routerModels.data !== "undefined" &&
-		typeof openRouterModelProviders.data !== "undefined"
+		apiConfiguration && typeof routerModels !== "undefined" && typeof openRouterModelProviders.data !== "undefined"
 			? getSelectedModel({
 					provider,
 					apiConfiguration,
-					routerModels: routerModels.data,
+					routerModels,
 					openRouterModelProviders: openRouterModelProviders.data,
 				})
 			: { id: anthropicDefaultModelId, info: undefined }
@@ -58,8 +62,8 @@ export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 		provider,
 		id,
 		info,
-		isLoading: routerModels.isLoading || openRouterModelProviders.isLoading,
-		isError: routerModels.isError || openRouterModelProviders.isError,
+		isLoading: queryRouterModels.isLoading || openRouterModelProviders.isLoading,
+		isError: queryRouterModels.isError || openRouterModelProviders.isError,
 	}
 }
 

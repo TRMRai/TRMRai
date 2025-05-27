@@ -16,8 +16,10 @@ import {
 import { vscode } from "@src/utils/vscode"
 import { validateApiConfiguration, validateModelId } from "@src/utils/validate"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
+
 import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
 
 import {
@@ -122,7 +124,12 @@ const ApiOptions = ({
 		info: selectedModelInfo,
 	} = useSelectedModel(apiConfiguration)
 
-	const { data: routerModels, refetch: refetchRouterModels } = useRouterModels()
+	const { routerModels: contextRouterModels } = useExtensionState()
+	const { data: queryRouterModels, refetch: refetchRouterModels } = useRouterModels()
+
+	// Router providers use context system, others use React Query system
+	const isRouterProvider = ["openrouter", "requesty", "glama", "unbound", "litellm"].includes(selectedProvider)
+	const routerModels = isRouterProvider ? contextRouterModels : queryRouterModels
 
 	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
