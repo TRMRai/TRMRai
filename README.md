@@ -170,4 +170,4 @@ We love community contributions! Get started by reading our [CONTRIBUTING.md](CO
 
 ---
 
-**Enjoy TRMR.ai!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/RooCode/) or [Discord](https://discord.gg/roocode). Happy coding!
+**Enjoy TRMR.ai!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. Happy coding!
