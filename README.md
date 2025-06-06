@@ -6,12 +6,14 @@
 <div align="center">
 <img src="https://github.com/TRMRai/TRMRai/blob/master/media/TRMRHORZ.png" width = 70%" />
 
-CA: 4VNwR9WK4pBF7LpnMn7XjHoSSvEBhPxHZ6HNTTgXbonk
   
   <p align="center">
-
+CA: 4VNwR9WK4pBF7LpnMn7XjHoSSvEBhPxHZ6HNTTgXbonk
 
 <img src="https://github.com/TRMRai/TRMRai/blob/master/media/trmr_demo.gif" width="100%" />
+
+<br>
+<br>
 
   </p>
   
