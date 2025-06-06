@@ -178,8 +178,8 @@ importers:
   src:
     dependencies:
       '@anthropic-ai/bedrock-sdk':
-        specifier: ^0.10.2
-        version: 0.10.4
+        specifier: ^0.22.1
+        version: 0.22.1
       '@anthropic-ai/sdk':
         specifier: ^0.37.0
         version: 0.37.0
@@ -756,11 +756,15 @@ packages:
   '@antfu/utils@8.1.1':
     resolution: {integrity: sha512-Mex9nXf9vR6AhcXmMrlz/HVgYYZpVGJ6YlPgwl7UnaFpnshXs6EK/oa5Gpf3CzENMjkvEx2tQtntGnb7UtSTOQ==}
 
-  '@anthropic-ai/bedrock-sdk@0.10.4':
-    resolution: {integrity: sha512-szduEHbMli6XL934xrraYg5cFuKL/1oMyj/iZuEVjtddQ7eD5cXObzWobsv5mTLWijQmSzMfFD+JAUHDPHlQ/Q==}
+  '@anthropic-ai/bedrock-sdk@0.22.1':
+    resolution: {integrity: sha512-BXz8DhUYEq0a3PsbPBjCadIewzdq6fcrpi9wOZ94MxhrQ/y0y1wYTFVXNO8mcLfleQOXOokLQNGeIC0yKk/FYw==}
 
   '@anthropic-ai/sdk@0.37.0':
     resolution: {integrity: sha512-tHjX2YbkUBwEgg0JZU3EFSSAQPoK4qQR/NFYa8Vtzd5UAyXzZksCw2In69Rml4R/TyHPBfRYaLK35XiOe33pjw==}
+
+  '@anthropic-ai/sdk@0.52.0':
+    resolution: {integrity: sha512-d4c+fg+xy9e46c8+YnrrgIQR45CZlAi7PwdzIfDXDM6ACxEZli1/fxhURsq30ZpMZy6LvSkr41jGq5aF5TD7rQ==}
+    hasBin: true
 
   '@anthropic-ai/vertex-sdk@0.7.0':
     resolution: {integrity: sha512-zNm3hUXgYmYDTyveIxOyxbcnh5VXFkrLo4bSnG6LAfGzW7k3k2iCNDSVKtR9qZrK2BCid7JtVu7jsEKaZ/9dSw==}
@@ -1113,6 +1117,10 @@ packages:
 
   '@babel/runtime@7.27.1':
     resolution: {integrity: sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.27.3':
+    resolution: {integrity: sha512-7EYtGezsdiDMyY80+65EzwiGmcJqpmcZCojSXaRgdrBaGtWTgDZKq69cPIVped6MkIM78cTQ2GOiEYjwOlG4xw==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -8683,9 +8691,9 @@ snapshots:
 
   '@antfu/utils@8.1.1': {}
 
-  '@anthropic-ai/bedrock-sdk@0.10.4':
+  '@anthropic-ai/bedrock-sdk@0.22.1':
     dependencies:
-      '@anthropic-ai/sdk': 0.37.0
+      '@anthropic-ai/sdk': 0.52.0
       '@aws-crypto/sha256-js': 4.0.0
       '@aws-sdk/client-bedrock-runtime': 3.817.0
       '@aws-sdk/credential-providers': 3.817.0
@@ -8698,7 +8706,6 @@ snapshots:
       '@smithy/util-base64': 2.3.0
     transitivePeerDependencies:
       - aws-crt
-      - encoding
 
   '@anthropic-ai/sdk@0.37.0':
     dependencies:
@@ -8711,6 +8718,8 @@ snapshots:
       node-fetch: 2.7.0
     transitivePeerDependencies:
       - encoding
+
+  '@anthropic-ai/sdk@0.52.0': {}
 
   '@anthropic-ai/vertex-sdk@0.7.0':
     dependencies:
@@ -9451,6 +9460,8 @@ snapshots:
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/runtime@7.27.1': {}
+
+  '@babel/runtime@7.27.3': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -11518,7 +11529,7 @@ snapshots:
   '@testing-library/dom@10.4.0':
     dependencies:
       '@babel/code-frame': 7.27.1
-      '@babel/runtime': 7.27.1
+      '@babel/runtime': 7.27.3
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
       chalk: 4.1.2
@@ -12342,7 +12353,7 @@ snapshots:
 
   babel-plugin-macros@3.1.0:
     dependencies:
-      '@babel/runtime': 7.27.1
+      '@babel/runtime': 7.27.3
       cosmiconfig: 7.1.0
       resolve: 1.22.10
     optional: true
